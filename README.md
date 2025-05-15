@@ -2,18 +2,57 @@
 
 # AWS CDK Starterkit
 
-> The perfect starter kit to create and deploy an AWS CDK App using TypeScript on your AWS account in less than 5 minutes using GitHub actions!
-
 [![Build Status](https://github.com/towardsthecloud/aws-cdk-starterkit/actions/workflows/build.yml/badge.svg)](https://github.com/towardsthecloud/aws-cdk-starterkit/actions/workflows/build.yml)
 [![ESLint Code Formatting](https://img.shields.io/badge/code_style-eslint-brightgreen.svg)](https://eslint.org)
 [![Latest release](https://img.shields.io/github/release/dannysteenman/aws-cdk-starterkit.svg)](https://github.com/towardsthecloud/aws-cdk-starterkit/releases)
 
-## Intro
-
 Welcome to the starting line of your next AWS CDK project. This repository is crafted to supercharge your project's setup with AWS CDK TypeScript, projen, and GitHub actions, ensuring a smooth and efficient deployment to your AWS account.
 
 > [!TIP]
-> [Unlock the full potention of your infrastructure - Partner with Us!](#unlock-the-full-potention-of-your-infrastructure---partner-with-us)
+> **Launch Faster on AWS and Become Fully Secure From Day One!** Our AWS Landing Zone Foundation service helps B2B companies achieve SOC 2 compliance 90% faster,  redirect 30% of engineering time back to product development all while eliminating the six-figure cost of specialized cloud engineers. so you can focus on shipping your product, instead of worrying about managing your infrastructure on AWS.
+>
+> [Schedule a free introduction call](https://towardsthecloud.com/contact) to discover how we can deliver 10x the value of securing and building your infrastructure on AWS for a fraction of the cost of a full-time cloud engineer.
+
+<details><summary>☁️ <strong>Learn more about our unique AWS Foundation Service</strong></summary>
+
+<br/>
+
+Is AWS complexity draining your engineering resources? Most B2B startups and growing businesses struggle with overwhelming configuration options, time-consuming compliance requirements, and diverting valuable developer talent away from core product development. Without specialized AWS expertise, you risk security vulnerabilities, mounting technical debt, and delayed time-to-market. All while your competitors race ahead.
+
+Traditional AWS consultancies only compound this problem. They're incentivized to bill by the hour, extending projects indefinitely rather than focusing on your business outcomes. We take the opposite approach. Our fixed-price subscription model proves how confident we are in delivering results, not just billable hours. We succeed when you succeed, aligning our incentives with your growth rather than your AWS complexity.
+
+## Our Solution: Enterprise-Grade AWS Foundation
+
+We deliver an enterprise-grade AWS Landing Zone built entirely in AWS CDK coupled with a support and consultacy foundation that grows with your business needs. Here's what we'll deliver to you:
+
+### We deploy a [Secure and Compliant Landing Zone](https://towardsthecloud.com/services/aws-landing-zone)
+- Multi-account architecture with proper security boundaries
+  - Achieves a **100% score on the industry-standard [CIS AWS Foundation Benchmark](https://docs.aws.amazon.com/securityhub/latest/userguide/cis-aws-foundations-benchmark.html)**
+  - **Achieves a 96% rating on AWS's own [foundational security best practices](https://docs.aws.amazon.com/securityhub/latest/userguide/fsbp-standard.html)**
+- Setup entirely using AWS CDK (Infrastructure as Code)
+- Budget monitoring and notifications across all accounts
+- Deploy changes quickly through GitHub Actions
+- We're continuously adding new features as listed on our [Roadmap](https://github.com/towardsthecloud/aws-cdk-landing-zone-roadmap)
+
+### We upskill and accelerate your Developers
+- They gain access to our library of ready-to-use, security-hardened AWS CDK components
+- They receive guidance on how to utilize AWS best practices for your architecture so you avoid technical debt later on
+
+### We monitor and maintain the multi-account setup & provide ongoing support
+- Gain new Landing Zone features once they're released and get free maintenance and security updates
+- Get priority support through Slack/Teams whenever you need assistance with infrastructure challenges
+- We proactively do quarterly [security](https://towardsthecloud.com/services/aws-security-review) and [cost optimization](https://towardsthecloud.com/services/aws-cost-optimization) assessments to verify AWS account compliance and provide advice to reduce your AWS bill
+
+### What This Means For Your Business
+- **30% Lower TCO**: Cut your Total Cost of Ownership (TCO) by up to 30% through right-sized resources and architectural optimization while eliminating the $150K+ annual cost of a specialized AWS hire
+- **Close Enterprise Deals Faster**: Win enterprise clients with SOC2 compliance ready in weeks instead of months - our clients report 50% faster sales cycles with security-conscious customers
+- **Unleash Your Development Team**: Redirect up to 30% of engineering time from infrastructure back to revenue-generating product features with our pre-built, compliant components
+- **Scale Without Infrastructure Headaches**: Grow from startup to enterprise without ever rebuilding your foundation - our architecture scales seamlessly from your first customer to your millionth
+
+We deliver all of this as a [simple subscription service](https://towardsthecloud.com/pricing). No large upfront costs, no lock-in. You'll essentially get a solid and secure landing zone foundation + a decade of AWS expertise without having to hire a full-time Cloud Engineer.
+
+<a href="https://towardsthecloud.com/contact"><img alt="Schedule a free introduction call" src="https://img.shields.io/badge/schedule%20a%20free%20introduction%20call-success.svg?style=for-the-badge"/></a>
+</details>
 
 ## Features
 
@@ -134,54 +173,13 @@ Here is a brief explanation of what each section does:
 - `src/lib/main.ts`: This is where the CDK app is instantiated.
 - `test`: Is the location to store your unit or integration tests (powered by jest)
 
-## Branch-based Deployments
+## Branch-based Deployments (Ephemeral Environments)
 
 This starter kit supports deploying multiple CDK stacks to the same AWS environments based on the Git branch. This enables you to easily test changes when multiple developers work on the same code base.
 
 When you create a new feature branch and push it to the repository, the GitHub Actions workflow will automatically deploy the CDK stacks to the corresponding AWS environment (e.g., dev, test, staging) based on the branch name.
 
 Additionally, the workflow includes a separate task to destroy the CDK stacks for the feature branch when the branch is deleted or the pull request is closed, ensuring that the resources are cleaned up after the testing is complete.
-
-## Unlock the full potention of your infrastructure - Partner with us!
-
-> [!TIP]
-> Supercharge Your AWS Infrastructure with [Towards the Cloud](https://towardsthecloud.com). We ship well-architected, resilient, and cost-optimized AWS solutions designed to scale using Infrastructure as Code (IaC), tailoring cloud-native systems for businesses of all sizes.
->
-> Our Approach:
->
-> - **Tailored AWS Solutions**: Custom-built for your unique business needs
-> - **Future-Proof Architecture**: Scalable designs that grow with you
-> - **Empowerment Through Ownership**: Your vision, your infrastructure, our expertise
->
-> Why Choose Us:
-> - 10+ Years of AWS Experience
-> - 7x AWS Certified, including DevOps Engineer & Solutions Architect Professional
-> - Proven Track Record: 40% Average Reduction in Operational Costs
->
-> Ready to elevate your AWS CDK Infrastructure?
->
-> <a href="https://towardsthecloud.com/contact"><img alt="Schedule your call" src="https://img.shields.io/badge/schedule%20your%20call-success.svg?style=for-the-badge"/></a>
-> <details><summary>☁️ <strong>Discover more about my one-person business: Towards the Cloud</strong></summary>
->
-> <br/>
->
-> Hi, I'm Danny – AWS expert and founder of [Towards the Cloud](https://towardsthecloud.com). With over a decade of hands-on experience, I specialized myself in deploying well-architected, highly scalable and cost-effective AWS Solutions using Infrastructure as Code (IaC).
->
-> #### When you work with me, you're getting a package deal of expertise and personalized service:
->
-> - **AWS CDK Proficiency**: I bring deep AWS CDK knowledge to the table, ensuring your infrastructure is not just maintainable and scalable, but also fully automated.
-> - **AWS Certified**: [Equipped with 7 AWS Certifications](https://www.credly.com/users/dannysteenman/badges), including DevOps Engineer & Solutions Architect Professional, to ensure best practices across diverse cloud scenarios.
-> - **Direct Access**: You work with me, not a team of managers. Expect quick decisions and high-quality work.
-> - **Tailored Solutions**: Understanding that no two businesses are alike, I Custom-fit cloud infrastructure for your unique needs.
-> - **Cost-Effective**: I'll optimize your AWS spending without cutting corners on performance or security.
-> - **Seamless CI/CD**: I'll set up smooth CI/CD processes using GitHub Actions, making changes a breeze through Pull Requests.
->
-> *My mission is simple: I'll free you from infrastructure headaches so you can focus on what truly matters – your core business.*
->
-> Ready to unlock the full potential of AWS Cloud?
->
-> <a href="https://towardsthecloud.com/contact"><img alt="Schedule your call" src="https://img.shields.io/badge/schedule%20your%20call-success.svg?style=for-the-badge"/></a>
-> </details>
 
 ## AWS CDK Starterkit for Python Users
 
