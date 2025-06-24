@@ -13,14 +13,14 @@ export interface EnvironmentConfig {
 }
 
 /**
- * Adds customized 'npm run' commands for executing AWS CDK actions (synth, diff, deploy, destroy)
+ * Adds customized 'npm run' commands for executing AWS CDK actions (synth, diff, deploy, destroy, ls)
  * for a specific environment and branch (if applicable).
  * @param cdkProject - The `AwsCdkTypeScriptApp` instance.
  * @param targetEnvironment - An object containing the environment-specific configuration,
  * including the AWS account ID and the environment name.
  */
 export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetAccount: { [name: string]: string }) {
-  const taskActions = ['synth', 'diff', 'deploy', 'destroy'];
+  const taskActions = ['synth', 'diff', 'deploy', 'destroy', 'ls'];
   const stackNamePattern = '*Stack*';
 
   for (const action of taskActions) {
@@ -32,14 +32,33 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
       action.charAt(0).toUpperCase() + action.slice(1)
     } the stacks on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
 
-    let execCommand = `cdk ${action} --require-approval never ${stackNamePattern}`;
-    if (action === 'destroy') execCommand = `cdk destroy --force ${stackNamePattern}`;
-    if (action === 'synth') execCommand = 'cdk synth';
+    let execCommand: string;
+
+    switch (action) {
+      case 'synth':
+        execCommand = 'cdk synth';
+        break;
+      case 'destroy':
+        execCommand = 'cdk destroy --force';
+        break;
+      case 'deploy':
+        execCommand = 'cdk deploy --require-approval never';
+        break;
+      case 'diff':
+        execCommand = 'cdk diff';
+        break;
+      case 'ls':
+        execCommand = 'cdk ls';
+        break;
+      default:
+        execCommand = `cdk ${action} --require-approval never`;
+    }
 
     cdkProject.addTask(taskName, {
       description: taskDescription,
       env: targetAccount,
       exec: execCommand,
+      ...(action === 'deploy' || action === 'destroy' || action === 'diff' ? { receiveArgs: true } : {}),
     });
 
     if (targetAccount.GIT_BRANCH_REF && action === 'destroy') {

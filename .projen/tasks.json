@@ -12,7 +12,8 @@
       },
       "steps": [
         {
-          "exec": "cdk deploy --require-approval never *Stack*"
+          "exec": "cdk deploy --require-approval never",
+          "receiveArgs": true
         }
       ]
     },
@@ -28,7 +29,8 @@
       },
       "steps": [
         {
-          "exec": "cdk destroy --force *Stack*"
+          "exec": "cdk destroy --force",
+          "receiveArgs": true
         }
       ]
     },
@@ -44,7 +46,24 @@
       },
       "steps": [
         {
-          "exec": "cdk diff --require-approval never *Stack*"
+          "exec": "cdk diff",
+          "receiveArgs": true
+        }
+      ]
+    },
+    "branch:test:ls": {
+      "name": "branch:test:ls",
+      "description": "Ls the stacks on the TEST account",
+      "env": {
+        "CDK_DEFAULT_ACCOUNT": "987654321012",
+        "CDK_DEFAULT_REGION": "us-east-1",
+        "ENVIRONMENT": "test",
+        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
+        "GIT_BRANCH_REF": "$(git rev-parse --abbrev-ref HEAD)"
+      },
+      "steps": [
+        {
+          "exec": "cdk ls"
         }
       ]
     },
@@ -220,7 +239,7 @@
       },
       "steps": [
         {
-          "exec": "cdk destroy --force *Stack*"
+          "exec": "cdk destroy --force"
         }
       ]
     },
@@ -278,7 +297,8 @@
       },
       "steps": [
         {
-          "exec": "cdk deploy --require-approval never *Stack*"
+          "exec": "cdk deploy --require-approval never",
+          "receiveArgs": true
         }
       ]
     },
@@ -293,7 +313,8 @@
       },
       "steps": [
         {
-          "exec": "cdk destroy --force *Stack*"
+          "exec": "cdk destroy --force",
+          "receiveArgs": true
         }
       ]
     },
@@ -308,7 +329,23 @@
       },
       "steps": [
         {
-          "exec": "cdk diff --require-approval never *Stack*"
+          "exec": "cdk diff",
+          "receiveArgs": true
+        }
+      ]
+    },
+    "production:ls": {
+      "name": "production:ls",
+      "description": "Ls the stacks on the PRODUCTION account",
+      "env": {
+        "CDK_DEFAULT_ACCOUNT": "123456789012",
+        "CDK_DEFAULT_REGION": "us-east-1",
+        "ENVIRONMENT": "production",
+        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole"
+      },
+      "steps": [
+        {
+          "exec": "cdk ls"
         }
       ]
     },
@@ -393,7 +430,8 @@
       },
       "steps": [
         {
-          "exec": "cdk deploy --require-approval never *Stack*"
+          "exec": "cdk deploy --require-approval never",
+          "receiveArgs": true
         }
       ]
     },
@@ -408,7 +446,8 @@
       },
       "steps": [
         {
-          "exec": "cdk destroy --force *Stack*"
+          "exec": "cdk destroy --force",
+          "receiveArgs": true
         }
       ]
     },
@@ -423,7 +462,23 @@
       },
       "steps": [
         {
-          "exec": "cdk diff --require-approval never *Stack*"
+          "exec": "cdk diff",
+          "receiveArgs": true
+        }
+      ]
+    },
+    "test:ls": {
+      "name": "test:ls",
+      "description": "Ls the stacks on the TEST account",
+      "env": {
+        "CDK_DEFAULT_ACCOUNT": "987654321012",
+        "CDK_DEFAULT_REGION": "us-east-1",
+        "ENVIRONMENT": "test",
+        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole"
+      },
+      "steps": [
+        {
+          "exec": "cdk ls"
         }
       ]
     },
