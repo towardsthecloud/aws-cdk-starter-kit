@@ -1,19 +1,24 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { github } from 'projen';
+import { getTaskName } from './env-helper';
 
-// Common workflow configurations
+const COMMON_RUNS_ON = ['ubuntu-latest'];
+const BRANCH_EXCLUSIONS = ['main', 'hotfix/*', 'github-actions/*', 'dependabot/**'];
+/** Standard permissions required for CDK deployment workflows. */
 const COMMON_WORKFLOW_PERMISSIONS = {
   actions: github.workflows.JobPermission.WRITE,
   contents: github.workflows.JobPermission.READ,
   idToken: github.workflows.JobPermission.WRITE,
 };
 
-const COMMON_RUNS_ON = ['ubuntu-latest'];
-
-const BRANCH_EXCLUSIONS = ['main', 'hotfix/*', 'github-actions/*', 'dependabot/**'];
-
 /**
  * Creates GitHub workflows for deploying and destroying AWS CDK stacks.
+ *
+ * Creates different workflow configurations based on the environment and branch deployment settings:
+ * - Always creates a regular deployment workflow for the environment
+ * - If deployForBranch=true, also creates branch deployment and destroy workflows
+ * - Production environments get concurrency limits to prevent parallel deployments
+ *
  * @param gh - An instance of the `github.GitHub` class, used to create the GitHub workflows.
  * @param account - The AWS account ID to which the CDK stacks will be deployed.
  * @param region - The AWS region to which the CDK stacks will be deployed.
@@ -63,16 +68,18 @@ function createCdkDeploymentWorkflow(
   deployForBranch: boolean,
 ): github.GithubWorkflow {
   const workflowName = `cdk-deploy-${env}${deployForBranch ? '-branch' : ''}`;
-  const workflowOptions = env === 'production' ? { limitConcurrency: true } : undefined;
+  // Regular environment deployments are limited to prevent concurrent deployments that could cause conflicts
+  // Branch deployments can run in parallel since they're isolated by branch name
+  const workflowOptions = !deployForBranch ? { limitConcurrency: true } : undefined;
   const cdkDeploymentWorkflow = new github.GithubWorkflow(gh, workflowName, workflowOptions);
 
   const workflowTriggers = {
     push: deployForBranch
-      ? { branches: ['**', ...BRANCH_EXCLUSIONS.map((branch) => `!${branch}`)] }
+      ? { branches: ['**', ...BRANCH_EXCLUSIONS.map((branch) => `!${branch}`)] } // All branches except excluded ones
       : env !== 'production'
-        ? { branches: ['main'] }
-        : undefined,
-    workflowDispatch: {},
+        ? { branches: ['main'] } // Non-production: trigger on main branch pushes
+        : undefined, // Production: manual only (no automatic triggers)
+    workflowDispatch: {}, // Always allow manual workflow dispatch
   };
 
   cdkDeploymentWorkflow.on(workflowTriggers);
@@ -82,11 +89,11 @@ function createCdkDeploymentWorkflow(
   const deploymentSteps = [
     {
       name: `Run CDK synth for the ${env.toUpperCase()} environment`,
-      run: deployForBranch ? `npm run branch:${env}:synth` : `npm run ${env}:synth`,
+      run: `npm run ${getTaskName(env, 'synth', { isBranch: deployForBranch })}`,
     },
     {
       name: `Deploy CDK to the ${env.toUpperCase()} environment on AWS account ${account}`,
-      run: deployForBranch ? `npm run branch:${env}:deploy:all` : `npm run ${env}:deploy:all`,
+      run: `npm run ${getTaskName(env, 'deploy', { isBranch: deployForBranch, taskType: 'all' })}`,
     },
   ];
 
@@ -105,6 +112,12 @@ function createCdkDeploymentWorkflow(
 
 /**
  * Creates a GitHub workflow for destroying the CDK stacks deployed for feature branches.
+ *
+ * This workflow handles three different destruction scenarios:
+ * 1. Manual destruction via workflow_dispatch (uses current branch ref)
+ * 2. Automatic destruction when a branch is deleted (extracts branch name from event)
+ * 3. Cleanup when pull requests are closed (uses PR head branch)
+ *
  * @param gh - An instance of the `github.GitHub` class, used to create the GitHub workflow.
  * @param account - The AWS account ID from which the CDK stacks will be destroyed.
  * @param region - The AWS region from which the CDK stacks will be destroyed.
@@ -145,7 +158,7 @@ function createCdkDestroyWorkflow(
     {
       name: 'Destroy Branch Stack (Workflow Dispatch)',
       if: "github.event_name == 'workflow_dispatch'",
-      run: `npm run githubbranch:${env}:destroy`,
+      run: `npm run ${getTaskName(env, 'destroy', { isBranch: true, taskType: 'all' })}`,
       env: {
         GIT_BRANCH_REF: '${{ github.ref_name }}',
       },
@@ -153,7 +166,7 @@ function createCdkDestroyWorkflow(
     {
       name: 'Destroy Branch Stack (Branch Deletion)',
       if: "github.event.ref_type == 'branch' && github.event_name == 'delete'",
-      run: `npm run githubbranch:${env}:destroy`,
+      run: `npm run ${getTaskName(env, 'destroy', { isBranch: true })}`,
       env: {
         GIT_BRANCH_REF: '${{ steps.destroy-branch.outputs.DESTROY_BRANCH_NAME }}',
       },
@@ -161,7 +174,7 @@ function createCdkDestroyWorkflow(
     {
       name: 'Destroy Branch Stack (Pull Request Closure)',
       if: "github.event_name == 'pull_request'",
-      run: `npm run githubbranch:${env}:destroy`,
+      run: `npm run ${getTaskName(env, 'destroy', { isBranch: true, taskType: 'all' })}`,
       env: {
         GIT_BRANCH_REF: '${{ github.head_ref }}',
       },
@@ -171,6 +184,7 @@ function createCdkDestroyWorkflow(
   cdkDestroyWorkflow.addJobs({
     destroy: {
       name: 'Remove deployment of feature branch',
+      // Run if: not main branch PR, OR branch deletion event, OR manual dispatch
       if: "github.head_ref != 'main' || (github.event.ref_type == 'branch' && github.event_name == 'delete') || github.event_name == 'workflow_dispatch'",
       runsOn: COMMON_RUNS_ON,
       environment: env,

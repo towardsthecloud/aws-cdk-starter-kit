@@ -43,14 +43,14 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         env:
           GIT_BRANCH_REF: ${{ github.ref_name }}
-        run: npm run githubbranch:test:destroy
+        run: npm run test:branch:destroy:all
       - name: Destroy Branch Stack (Branch Deletion)
         if: github.event.ref_type == 'branch' && github.event_name == 'delete'
         env:
           GIT_BRANCH_REF: ${{ steps.destroy-branch.outputs.DESTROY_BRANCH_NAME }}
-        run: npm run githubbranch:test:destroy
+        run: npm run test:branch:destroy
       - name: Destroy Branch Stack (Pull Request Closure)
         if: github.event_name == 'pull_request'
         env:
           GIT_BRANCH_REF: ${{ github.head_ref }}
-        run: npm run githubbranch:test:destroy
+        run: npm run test:branch:destroy:all

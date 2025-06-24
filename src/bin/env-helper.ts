@@ -4,6 +4,9 @@ import type { awscdk } from 'projen';
 /** Represents the possible deployment environments. */
 export type Environment = 'sandbox' | 'development' | 'test' | 'staging' | 'production';
 
+/** Supported CDK actions for task generation. */
+export const SUPPORTED_CDK_ACTIONS = ['synth', 'diff', 'deploy', 'destroy', 'ls'] as const;
+
 /** Configuration settings for a specific environment. */
 export interface EnvironmentConfig {
   /** The unique identifier for the account. */
@@ -13,20 +16,64 @@ export interface EnvironmentConfig {
 }
 
 /**
+ * Generates a task name following the consistent naming convention.
+ *
+ * @param environment - The environment name (e.g., 'development', 'production').
+ * @param action - The CDK action (e.g., 'synth', 'deploy', 'destroy').
+ * @param options - Additional options for task naming.
+ * @returns The formatted task name.
+ *
+ * @example
+ * // Regular environment task
+ * getTaskName('development', 'synth') // Returns: "development:synth"
+ *
+ * @example
+ * // Branch deployment task with all stacks
+ * getTaskName('staging', 'deploy', { isBranch: true, taskType: 'all' }) // Returns: "staging:branch:deploy:all"
+ *
+ * @example
+ * // Branch deployment task for specific stack
+ * getTaskName('staging', 'deploy', { isBranch: true, taskType: 'stack' }) // Returns: "staging:branch:deploy:stack"
+ */
+export function getTaskName(
+  environment: string,
+  action: string,
+  options: {
+    isBranch?: boolean;
+    taskType?: 'all' | 'stack';
+  } = {}
+): string {
+  const { isBranch = false, taskType } = options;
+
+  let taskName = isBranch
+    ? `${environment}:branch:${action}`
+    : `${environment}:${action}`;
+
+  // Add task type suffix for actions that support it (not synth or ls)
+  if (taskType && action !== 'synth' && action !== 'ls') {
+    taskName += `:${taskType}`;
+  }
+
+  return taskName;
+}
+
+/**
  * Adds customized 'npm run' commands for executing AWS CDK actions (synth, diff, deploy, destroy, ls)
  * for a specific environment and branch (if applicable).
+ *
+ * Creates different task variants:
+ * - For synth/ls: Single task that operates on all stacks
+ * - For deploy/destroy/diff: Two variants (:all for all stacks, :stack for specific stacks)
+ * - Branch deployments get "branch" in the task name when GIT_BRANCH_REF is present
+ *
  * @param cdkProject - The `AwsCdkTypeScriptApp` instance.
- * @param targetEnvironment - An object containing the environment-specific configuration,
- * including the AWS account ID and the environment name.
+ * @param targetAccount - An object containing the environment-specific configuration,
+ * including the AWS account ID, environment name, and optional GIT_BRANCH_REF.
  */
 export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetAccount: { [name: string]: string }) {
-  const taskActions = ['synth', 'diff', 'deploy', 'destroy', 'ls'];
-  const stackNamePattern = '*Stack*';
-
-  for (const action of taskActions) {
-    const baseTaskName = targetAccount.GIT_BRANCH_REF
-      ? `branch:${targetAccount.ENVIRONMENT}:${action}`
-      : `${targetAccount.ENVIRONMENT}:${action}`;
+  for (const action of SUPPORTED_CDK_ACTIONS) {
+    const isBranch = !!targetAccount.GIT_BRANCH_REF;
+    const baseTaskName = getTaskName(targetAccount.ENVIRONMENT, action, { isBranch });
 
     let execCommand: string;
 
@@ -50,7 +97,7 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
         execCommand = `cdk ${action} --require-approval never`;
     }
 
-    // For synth and ls, create a single task since they operate on all stacks by default
+    // Actions that operate on all stacks by default - create single task
     if (action === 'synth' || action === 'ls') {
       const taskDescription = `${
         action.charAt(0).toUpperCase() + action.slice(1)
@@ -62,9 +109,9 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
         exec: execCommand,
       });
     } else {
-      // For deploy, destroy, diff - create both :all and :stack variants
+      // Actions that can target specific stacks - create both :all and :stack variants
       // Task for all stacks
-      const allTaskName = `${baseTaskName}:all`;
+      const allTaskName = getTaskName(targetAccount.ENVIRONMENT, action, { isBranch, taskType: 'all' });
       const allTaskDescription = `${
         action.charAt(0).toUpperCase() + action.slice(1)
       } all stacks on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
@@ -76,7 +123,7 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
       });
 
       // Task for single stacks (with receiveArgs)
-      const stackTaskName = `${baseTaskName}:stack`;
+      const stackTaskName = getTaskName(targetAccount.ENVIRONMENT, action, { isBranch, taskType: 'stack' });
       const stackTaskDescription = `${
         action.charAt(0).toUpperCase() + action.slice(1)
       } specific stack(s) on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
@@ -86,20 +133,6 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
         env: targetAccount,
         exec: execCommand,
         receiveArgs: true,
-      });
-    }
-
-    if (targetAccount.GIT_BRANCH_REF && action === 'destroy') {
-      const { GIT_BRANCH_REF, ...ghBranchTargetAccount } = targetAccount;
-      const githubBranchTaskName = `githubbranch:${targetAccount.ENVIRONMENT}:${action}`;
-      const githubTaskDescription = `${
-        action.charAt(0).toUpperCase() + action.slice(1)
-      } the stacks on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
-
-      cdkProject.addTask(githubBranchTaskName, {
-        description: githubTaskDescription,
-        env: ghBranchTargetAccount,
-        exec: execCommand,
       });
     }
   }
