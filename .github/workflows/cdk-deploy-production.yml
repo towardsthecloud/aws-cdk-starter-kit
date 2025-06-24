@@ -31,6 +31,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run CDK synth for the PRODUCTION environment
-        run: npm run production:synth
+        run: npm run production:synth:all
       - name: Deploy CDK to the PRODUCTION environment on AWS account 123456789012
-        run: npm run production:deploy
+        run: npm run production:deploy:all

@@ -24,13 +24,9 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
   const stackNamePattern = '*Stack*';
 
   for (const action of taskActions) {
-    const taskName = targetAccount.GIT_BRANCH_REF
+    const baseTaskName = targetAccount.GIT_BRANCH_REF
       ? `branch:${targetAccount.ENVIRONMENT}:${action}`
       : `${targetAccount.ENVIRONMENT}:${action}`;
-
-    const taskDescription = `${
-      action.charAt(0).toUpperCase() + action.slice(1)
-    } the stacks on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
 
     let execCommand: string;
 
@@ -54,18 +50,36 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
         execCommand = `cdk ${action} --require-approval never`;
     }
 
-    cdkProject.addTask(taskName, {
-      description: taskDescription,
+    // Task for all stacks
+    const allTaskName = `${baseTaskName}:all`;
+    const allTaskDescription = `${
+      action.charAt(0).toUpperCase() + action.slice(1)
+    } all stacks on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
+
+    cdkProject.addTask(allTaskName, {
+      description: allTaskDescription,
+      env: targetAccount,
+      exec: action === 'ls' ? execCommand : `${execCommand} --all`,
+    });
+
+    // Task for single stacks (with receiveArgs)
+    const stackTaskName = `${baseTaskName}:stack`;
+    const stackTaskDescription = `${
+      action.charAt(0).toUpperCase() + action.slice(1)
+    } specific stack(s) on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
+
+    cdkProject.addTask(stackTaskName, {
+      description: stackTaskDescription,
       env: targetAccount,
       exec: execCommand,
-      ...(action === 'deploy' || action === 'destroy' || action === 'diff' ? { receiveArgs: true } : {}),
+      receiveArgs: true,
     });
 
     if (targetAccount.GIT_BRANCH_REF && action === 'destroy') {
       const { GIT_BRANCH_REF, ...ghBranchTargetAccount } = targetAccount;
       const githubBranchTaskName = `githubbranch:${targetAccount.ENVIRONMENT}:${action}`;
       cdkProject.addTask(githubBranchTaskName, {
-        description: taskDescription,
+        description: allTaskDescription,
         env: ghBranchTargetAccount,
         exec: execCommand,
       });
