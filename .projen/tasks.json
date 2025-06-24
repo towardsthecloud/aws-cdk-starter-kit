@@ -99,9 +99,9 @@
         }
       ]
     },
-    "branch:test:ls:all": {
-      "name": "branch:test:ls:all",
-      "description": "Ls all stacks on the TEST account",
+    "branch:test:ls": {
+      "name": "branch:test:ls",
+      "description": "Ls the stacks on the TEST account",
       "env": {
         "CDK_DEFAULT_ACCOUNT": "987654321012",
         "CDK_DEFAULT_REGION": "us-east-1",
@@ -115,9 +115,9 @@
         }
       ]
     },
-    "branch:test:ls:stack": {
-      "name": "branch:test:ls:stack",
-      "description": "Ls specific stack(s) on the TEST account",
+    "branch:test:synth": {
+      "name": "branch:test:synth",
+      "description": "Synth the stacks on the TEST account",
       "env": {
         "CDK_DEFAULT_ACCOUNT": "987654321012",
         "CDK_DEFAULT_REGION": "us-east-1",
@@ -127,41 +127,7 @@
       },
       "steps": [
         {
-          "exec": "cdk ls",
-          "receiveArgs": true
-        }
-      ]
-    },
-    "branch:test:synth:all": {
-      "name": "branch:test:synth:all",
-      "description": "Synth all stacks on the TEST account",
-      "env": {
-        "CDK_DEFAULT_ACCOUNT": "987654321012",
-        "CDK_DEFAULT_REGION": "us-east-1",
-        "ENVIRONMENT": "test",
-        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
-        "GIT_BRANCH_REF": "$(git rev-parse --abbrev-ref HEAD)"
-      },
-      "steps": [
-        {
-          "exec": "cdk synth --all"
-        }
-      ]
-    },
-    "branch:test:synth:stack": {
-      "name": "branch:test:synth:stack",
-      "description": "Synth specific stack(s) on the TEST account",
-      "env": {
-        "CDK_DEFAULT_ACCOUNT": "987654321012",
-        "CDK_DEFAULT_REGION": "us-east-1",
-        "ENVIRONMENT": "test",
-        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
-        "GIT_BRANCH_REF": "$(git rev-parse --abbrev-ref HEAD)"
-      },
-      "steps": [
-        {
-          "exec": "cdk synth",
-          "receiveArgs": true
+          "exec": "cdk synth"
         }
       ]
     },
@@ -312,7 +278,7 @@
     },
     "githubbranch:test:destroy": {
       "name": "githubbranch:test:destroy",
-      "description": "Destroy all stacks on the TEST account",
+      "description": "Destroy the stacks on the TEST account",
       "env": {
         "CDK_DEFAULT_ACCOUNT": "987654321012",
         "CDK_DEFAULT_REGION": "us-east-1",
@@ -461,9 +427,9 @@
         }
       ]
     },
-    "production:ls:all": {
-      "name": "production:ls:all",
-      "description": "Ls all stacks on the PRODUCTION account",
+    "production:ls": {
+      "name": "production:ls",
+      "description": "Ls the stacks on the PRODUCTION account",
       "env": {
         "CDK_DEFAULT_ACCOUNT": "123456789012",
         "CDK_DEFAULT_REGION": "us-east-1",
@@ -476,9 +442,9 @@
         }
       ]
     },
-    "production:ls:stack": {
-      "name": "production:ls:stack",
-      "description": "Ls specific stack(s) on the PRODUCTION account",
+    "production:synth": {
+      "name": "production:synth",
+      "description": "Synth the stacks on the PRODUCTION account",
       "env": {
         "CDK_DEFAULT_ACCOUNT": "123456789012",
         "CDK_DEFAULT_REGION": "us-east-1",
@@ -487,39 +453,7 @@
       },
       "steps": [
         {
-          "exec": "cdk ls",
-          "receiveArgs": true
-        }
-      ]
-    },
-    "production:synth:all": {
-      "name": "production:synth:all",
-      "description": "Synth all stacks on the PRODUCTION account",
-      "env": {
-        "CDK_DEFAULT_ACCOUNT": "123456789012",
-        "CDK_DEFAULT_REGION": "us-east-1",
-        "ENVIRONMENT": "production",
-        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole"
-      },
-      "steps": [
-        {
-          "exec": "cdk synth --all"
-        }
-      ]
-    },
-    "production:synth:stack": {
-      "name": "production:synth:stack",
-      "description": "Synth specific stack(s) on the PRODUCTION account",
-      "env": {
-        "CDK_DEFAULT_ACCOUNT": "123456789012",
-        "CDK_DEFAULT_REGION": "us-east-1",
-        "ENVIRONMENT": "production",
-        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole"
-      },
-      "steps": [
-        {
-          "exec": "cdk synth",
-          "receiveArgs": true
+          "exec": "cdk synth"
         }
       ]
     },
@@ -671,9 +605,9 @@
         }
       ]
     },
-    "test:ls:all": {
-      "name": "test:ls:all",
-      "description": "Ls all stacks on the TEST account",
+    "test:ls": {
+      "name": "test:ls",
+      "description": "Ls the stacks on the TEST account",
       "env": {
         "CDK_DEFAULT_ACCOUNT": "987654321012",
         "CDK_DEFAULT_REGION": "us-east-1",
@@ -686,9 +620,9 @@
         }
       ]
     },
-    "test:ls:stack": {
-      "name": "test:ls:stack",
-      "description": "Ls specific stack(s) on the TEST account",
+    "test:synth": {
+      "name": "test:synth",
+      "description": "Synth the stacks on the TEST account",
       "env": {
         "CDK_DEFAULT_ACCOUNT": "987654321012",
         "CDK_DEFAULT_REGION": "us-east-1",
@@ -697,39 +631,7 @@
       },
       "steps": [
         {
-          "exec": "cdk ls",
-          "receiveArgs": true
-        }
-      ]
-    },
-    "test:synth:all": {
-      "name": "test:synth:all",
-      "description": "Synth all stacks on the TEST account",
-      "env": {
-        "CDK_DEFAULT_ACCOUNT": "987654321012",
-        "CDK_DEFAULT_REGION": "us-east-1",
-        "ENVIRONMENT": "test",
-        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole"
-      },
-      "steps": [
-        {
-          "exec": "cdk synth --all"
-        }
-      ]
-    },
-    "test:synth:stack": {
-      "name": "test:synth:stack",
-      "description": "Synth specific stack(s) on the TEST account",
-      "env": {
-        "CDK_DEFAULT_ACCOUNT": "987654321012",
-        "CDK_DEFAULT_REGION": "us-east-1",
-        "ENVIRONMENT": "test",
-        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole"
-      },
-      "steps": [
-        {
-          "exec": "cdk synth",
-          "receiveArgs": true
+          "exec": "cdk synth"
         }
       ]
     },

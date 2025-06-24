@@ -31,6 +31,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run CDK synth for the TEST environment
-        run: npm run test:synth:all
+        run: npm run test:synth
       - name: Deploy CDK to the TEST environment on AWS account 987654321012
         run: npm run test:deploy:all

@@ -82,7 +82,7 @@ function createCdkDeploymentWorkflow(
   const deploymentSteps = [
     {
       name: `Run CDK synth for the ${env.toUpperCase()} environment`,
-      run: deployForBranch ? `npm run branch:${env}:synth:all` : `npm run ${env}:synth:all`,
+      run: deployForBranch ? `npm run branch:${env}:synth` : `npm run ${env}:synth`,
     },
     {
       name: `Deploy CDK to the ${env.toUpperCase()} environment on AWS account ${account}`,

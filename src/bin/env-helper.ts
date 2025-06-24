@@ -50,36 +50,54 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
         execCommand = `cdk ${action} --require-approval never`;
     }
 
-    // Task for all stacks
-    const allTaskName = `${baseTaskName}:all`;
-    const allTaskDescription = `${
-      action.charAt(0).toUpperCase() + action.slice(1)
-    } all stacks on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
+    // For synth and ls, create a single task since they operate on all stacks by default
+    if (action === 'synth' || action === 'ls') {
+      const taskDescription = `${
+        action.charAt(0).toUpperCase() + action.slice(1)
+      } the stacks on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
 
-    cdkProject.addTask(allTaskName, {
-      description: allTaskDescription,
-      env: targetAccount,
-      exec: action === 'ls' ? execCommand : `${execCommand} --all`,
-    });
+      cdkProject.addTask(baseTaskName, {
+        description: taskDescription,
+        env: targetAccount,
+        exec: execCommand,
+      });
+    } else {
+      // For deploy, destroy, diff - create both :all and :stack variants
+      // Task for all stacks
+      const allTaskName = `${baseTaskName}:all`;
+      const allTaskDescription = `${
+        action.charAt(0).toUpperCase() + action.slice(1)
+      } all stacks on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
 
-    // Task for single stacks (with receiveArgs)
-    const stackTaskName = `${baseTaskName}:stack`;
-    const stackTaskDescription = `${
-      action.charAt(0).toUpperCase() + action.slice(1)
-    } specific stack(s) on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
+      cdkProject.addTask(allTaskName, {
+        description: allTaskDescription,
+        env: targetAccount,
+        exec: `${execCommand} --all`,
+      });
 
-    cdkProject.addTask(stackTaskName, {
-      description: stackTaskDescription,
-      env: targetAccount,
-      exec: execCommand,
-      receiveArgs: true,
-    });
+      // Task for single stacks (with receiveArgs)
+      const stackTaskName = `${baseTaskName}:stack`;
+      const stackTaskDescription = `${
+        action.charAt(0).toUpperCase() + action.slice(1)
+      } specific stack(s) on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
+
+      cdkProject.addTask(stackTaskName, {
+        description: stackTaskDescription,
+        env: targetAccount,
+        exec: execCommand,
+        receiveArgs: true,
+      });
+    }
 
     if (targetAccount.GIT_BRANCH_REF && action === 'destroy') {
       const { GIT_BRANCH_REF, ...ghBranchTargetAccount } = targetAccount;
       const githubBranchTaskName = `githubbranch:${targetAccount.ENVIRONMENT}:${action}`;
+      const githubTaskDescription = `${
+        action.charAt(0).toUpperCase() + action.slice(1)
+      } the stacks on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
+
       cdkProject.addTask(githubBranchTaskName, {
-        description: allTaskDescription,
+        description: githubTaskDescription,
         env: ghBranchTargetAccount,
         exec: execCommand,
       });
