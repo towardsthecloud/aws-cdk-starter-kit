@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import type { awscdk } from 'projen';
 
 /** Represents the possible deployment environments. */
@@ -41,13 +40,11 @@ export function getTaskName(
   options: {
     isBranch?: boolean;
     taskType?: 'all' | 'stack';
-  } = {}
+  } = {},
 ): string {
   const { isBranch = false, taskType } = options;
 
-  let taskName = isBranch
-    ? `${environment}:branch:${action}`
-    : `${environment}:${action}`;
+  let taskName = isBranch ? `${environment}:branch:${action}` : `${environment}:${action}`;
 
   // Add task type suffix for actions that support it (not synth or ls)
   if (taskType && action !== 'synth' && action !== 'ls') {

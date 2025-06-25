@@ -42,7 +42,7 @@ export interface StarterStackProps extends cdk.StackProps {
  * @param props - Stack properties including the deployment environment
  */
 export class StarterStack extends cdk.Stack {
-  // biome-ignore lint/complexity/noUselessConstructor: <explanation>
+  // biome-ignore lint/complexity/noUselessConstructor: Constructor needed for proper props typing
   constructor(scope: Construct, id: string, props: StarterStackProps) {
     super(scope, id, props);
 

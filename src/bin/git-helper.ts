@@ -29,7 +29,7 @@ function getGitRemoteUrl(): string {
  * @returns An object containing the Git repository owner and name.
  */
 function parseGitRemoteUrl(gitRemoteUrl: string): { gitOwner: string | undefined; gitRepoName: string | undefined } {
-  const urlPattern = /(?:git@|https:\/\/)([\w\.@:]+)[\/:]([\w,.,-]+)\/([\w,.,-]+?)(\.git)?$/;
+  const urlPattern = /(?:git@|https:\/\/)([\w.@:]+)[/:]([\w,.,-]+)\/([\w,.,-]+?)(\.git)?$/;
   const match = gitRemoteUrl.match(urlPattern);
 
   if (!match || match.length < 4) {

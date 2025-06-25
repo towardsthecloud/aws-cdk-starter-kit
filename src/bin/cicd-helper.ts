@@ -1,4 +1,4 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
+/** biome-ignore-all lint/suspicious/noTemplateCurlyInString: GitHub Actions workflow templates use ${{ }} syntax */
 import { github } from 'projen';
 import { getTaskName } from './env-helper';
 

@@ -1,8 +1,9 @@
 import { awscdk } from 'projen';
 import { DependabotScheduleInterval } from 'projen/lib/github';
 import { NodePackageManager } from 'projen/lib/javascript';
+import { IndentStyle, QuoteStyle, Semicolons, TrailingCommas } from 'projen/lib/javascript/biome/biome-config';
 import { createCdkDeploymentWorkflows } from './src/bin/cicd-helper';
-import { Environment, EnvironmentConfig, addCdkActionTask } from './src/bin/env-helper';
+import { addCdkActionTask, type Environment, type EnvironmentConfig } from './src/bin/env-helper';
 
 // Set the minimum node version for AWS CDK and the GitHub actions workflow
 const nodeVersion = '20.18.1';
@@ -39,19 +40,30 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   projenrcTs: true,
   release: true,
   deps: ['cloudstructs'] /* Runtime dependencies of this module. */,
-  prettier: true,
-  prettierOptions: {
-    settings: {
-      jsxSingleQuote: true,
-      singleQuote: true,
-      printWidth: 120,
-    },
-  },
-  eslintOptions: {
-    prettier: true,
-    dirs: ['src', 'test'],
-    commandOptions: {
-      fix: true,
+  biome: true,
+  biomeOptions: {
+    biomeConfig: {
+      formatter: {
+        enabled: true,
+        useEditorconfig: true,
+        formatWithErrors: false,
+        indentStyle: IndentStyle.SPACE,
+        indentWidth: 2,
+        lineWidth: 120,
+      },
+      javascript: {
+        formatter: {
+          jsxQuoteStyle: QuoteStyle.SINGLE,
+          quoteStyle: QuoteStyle.SINGLE,
+          trailingCommas: TrailingCommas.ALL,
+          semicolons: Semicolons.ALWAYS,
+        },
+      },
+      json: {
+        parser: {
+          allowComments: true,
+        },
+      },
     },
   },
   autoApproveOptions: {
@@ -97,37 +109,18 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     },
   },
   gitignore: [
-    '__pycache__',
-    '__pycache__/',
-    '!.eslintrc.js',
-    '.cache',
-    '.coverage.*',
-    '.coverage',
     '.DS_Store',
     '.env',
-    '.mypy_cache',
     '.pytest_cache',
-    '.Python',
     '.venv/',
     '.vscode',
     '*.js',
-    '*.log',
     '*.manifest',
     '*.pyc',
     '*.spec',
     '*.zip',
-    '**/cdk-test-report.xml',
-    '*node_modules*',
-    'build/',
     'coverage/',
     'dist/',
-    'downloads/',
-    'env/',
-    'ENV/',
-    'htmlcov/',
-    'sdist/',
-    'var/',
-    'venv/',
   ],
 });
 
