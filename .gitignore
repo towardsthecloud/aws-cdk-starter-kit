@@ -32,7 +32,6 @@ jspm_packages/
 .yarn-integrity
 __pycache__
 __pycache__/
-!.eslintrc.js
 .cache
 .coverage.*
 .coverage
@@ -70,15 +69,13 @@ junit.xml
 !/.github/workflows/release.yml
 !/.github/dependabot.yml
 !/.github/pull_request_template.md
-!/.prettierignore
-!/.prettierrc.json
+!/biome.jsonc
 !/test/
 !/tsconfig.json
 !/tsconfig.dev.json
 !/src/
 /lib
 /dist/
-!/.eslintrc.json
 /assets/
 !/cdk.json
 /cdk.out/

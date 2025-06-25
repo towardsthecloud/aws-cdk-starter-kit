@@ -1,22 +1,17 @@
 {
   "dependencies": [
     {
+      "name": "@biomejs/biome",
+      "version": "^2",
+      "type": "build"
+    },
+    {
       "name": "@types/jest",
       "type": "build"
     },
     {
       "name": "@types/node",
       "version": "^20",
-      "type": "build"
-    },
-    {
-      "name": "@typescript-eslint/eslint-plugin",
-      "version": "^8",
-      "type": "build"
-    },
-    {
-      "name": "@typescript-eslint/parser",
-      "version": "^8",
       "type": "build"
     },
     {
@@ -34,37 +29,12 @@
       "type": "build"
     },
     {
-      "name": "eslint-config-prettier",
-      "type": "build"
-    },
-    {
-      "name": "eslint-import-resolver-typescript",
-      "type": "build"
-    },
-    {
-      "name": "eslint-plugin-import",
-      "type": "build"
-    },
-    {
-      "name": "eslint-plugin-prettier",
-      "type": "build"
-    },
-    {
-      "name": "eslint",
-      "version": "^9",
-      "type": "build"
-    },
-    {
       "name": "jest",
       "type": "build"
     },
     {
       "name": "jest-junit",
       "version": "^16",
-      "type": "build"
-    },
-    {
-      "name": "prettier",
       "type": "build"
     },
     {
