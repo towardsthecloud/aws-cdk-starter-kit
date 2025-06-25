@@ -1,0 +1,194 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# AWS CDK Best Practices
+
+## Stack Organization Philosophy
+
+### Prefer Constructs Over Multiple Stacks
+
+**Rule**: Always favor creating reusable constructs over proliferating stacks. Stacks should be the exception, not the rule.
+
+- **✅ Do**: Create custom constructs in `src/constructs/` for logical groupings of resources
+- **❌ Don't**: Create a new stack for every service or application component
+- **Why**: Constructs are easier to test, reuse, and maintain. They provide better encapsulation and can be shared across different stacks
+
+### When to Split Stacks
+
+Only create multiple stacks when **absolutely necessary**. Valid reasons include:
+
+1. **Lifecycle Differences**: Resources with fundamentally different deployment cadences
+2. **Stateful vs Stateless**: Separate stateful resources that need protection from stateless application resources
+3. **Team Boundaries**: When different teams own completely separate infrastructure domains
+4. **Environment Isolation**: Cross-environment shared resources (e.g., shared VPCs, DNS zones)
+5. **Security Boundaries**: When different security domains require isolation for compliance or regulatory requirements
+
+**Before creating multiple stacks, consider these alternatives:**
+- Use AWS Solutions Constructs for common multi-service patterns
+- Create custom constructs that encapsulate related resources
+
+### Stack Splitting Strategy by Statefulness
+
+When splitting stacks is unavoidable, organize by resource lifecycle and statefulness:
+
+#### Foundation Stack (Stateful)
+```typescript
+// Contains long-lived, stateful resources
+- VPC and networking
+- RDS databases
+- S3 buckets
+- DynamoDB tables
+- ElastiCache clusters
+- Secrets Manager secrets
+- KMS keys
+```
+
+#### Application Stack (Stateless)
+```typescript
+// Contains frequently changing, stateless resources
+- Lambda functions
+- API Gateway
+- ECS services
+- Step Functions
+- EventBridge rules
+- CloudWatch alarms
+```
+
+## Cross-Stack Dependencies
+
+### Use SSM Parameters for Resource Sharing
+
+**Rule**: Never use direct stack references. Always use SSM Parameter Store for cross-stack resource sharing.
+
+#### ✅ Correct Pattern
+
+**Foundation Stack** (exports):
+```typescript
+// In foundation-stack.ts
+const bucket = new s3.Bucket(this, 'DataBucket');
+const database = new rds.DatabaseInstance(this, 'Database');
+
+// Export via SSM
+new ssm.StringParameter(this, 'DataBucketName', {
+  parameterName: `/foundation/${props.environment}/s3/data-bucket-name`,
+  stringValue: bucket.bucketName,
+});
+
+new ssm.StringParameter(this, 'DatabaseEndpoint', {
+  parameterName: `/foundation/${props.environment}/rds/database-endpoint`,
+  stringValue: database.instanceEndpoint.hostname,
+});
+```
+
+**Application Stack** (imports):
+```typescript
+// In constructs/api-construct.ts
+const bucketName = ssm.StringParameter.valueForStringParameter(
+  this,
+  `/foundation/${environment}/s3/data-bucket-name`
+);
+
+const bucket = s3.Bucket.fromBucketName(this, 'ImportedBucket', bucketName);
+```
+
+#### ❌ Incorrect Pattern
+```typescript
+// Don't do this - creates tight coupling
+const foundationStack = new FoundationStack(app, 'Foundation');
+const appStack = new ApplicationStack(app, 'App', {
+  bucket: foundationStack.bucket // ❌ Direct reference
+});
+```
+
+### Construct Creation Guidelines
+
+**For detailed construct creation guidance**, see the dedicated agent-based rule: [cdk-construct.mdc](mdc:.cursor/rules/cdk-construct.mdc)
+
+This specialized rule activates when creating new constructs and provides:
+- Requirements gathering questions framework
+- Architecture pattern discovery via MCP Server
+- Implementation guidelines and best practices
+- Testing and documentation requirements
+
+## Resource Management
+
+### Stateful Resource Guidelines
+
+1. **Backup Strategy**: All stateful resources must have backup/recovery configured using ternary operators (production only)
+2. **Deletion Protection**: Enable deletion protection using ternary operators (production only)
+3. **Encryption**: All data at rest and in transit must be encrypted using customer-managed KMS keys
+4. **KMS Key Strategy**: Create one KMS key per AWS service type, not per resource, to reduce cost and maintenance
+5. **Access Control**: Use least privilege access patterns
+
+### Environment-Specific Configuration
+
+```typescript
+/**
+ * Create service-specific KMS keys for encryption
+ * One key per service type to reduce cost and maintenance overhead
+ */
+const rdsKey = new kms.Key(this, 'RdsEncryptionKey', {
+  description: 'KMS key for RDS encryption',
+  enableKeyRotation: true,
+});
+
+const s3Key = new kms.Key(this, 'S3EncryptionKey', {
+  description: 'KMS key for S3 encryption',
+  enableKeyRotation: true,
+});
+
+/**
+ * Use ternary operators for environment-specific configurations
+ * Apply backup and deletion protection only in production
+ */
+const database = new rds.DatabaseInstance(this, 'Database', {
+  instanceType: this.environment === 'prod' ? 't3.large' : 't3.micro',
+  multiAz: this.environment === 'prod',
+  backupRetention: this.environment === 'prod' ? 30 : 0,
+  deletionProtection: this.environment === 'prod',
+  kmsKey: rdsKey,
+  storageEncrypted: true,
+});
+
+const bucket = new s3.Bucket(this, 'DataBucket', {
+  encryption: s3.BucketEncryption.KMS,
+  encryptionKey: s3Key,
+  versioned: this.environment === 'prod',
+});
+
+const vpc = new ec2.Vpc(this, 'Vpc', {
+  ipAddresses: ec2.IpAddresses.cidr(
+    this.environment === 'dev' ? '172.16.0.0/16' :
+    this.environment === 'test' ? '172.17.0.0/16' : '172.18.0.0/16'
+  ),
+});
+```
+
+## Documentation Requirements
+
+### Code Comments
+
+- Use JSDoc/TypeScript docstrings (`/** */`) for all code comments
+- Only document complex business logic, not single line comments explaining what it is
+- Include links to relevant AWS documentation if applicable
+
+## MCP Integration Guidelines
+
+### AWS CDK MCP Server Usage
+
+The AWS CDK MCP server provides specialized guidance and tooling. Use it when:
+
+1. **Security Analysis**: For CDK Nag rule explanations and suppression reviews
+2. **Architecture Patterns**: When looking for AWS Solutions Constructs for common patterns
+3. **AI/ML Infrastructure**: For GenAI and Bedrock-related constructs
+4. **Best Practice Validation**: For general CDK guidance and recommendations
+5. **Lambda Layers**: For layer documentation and best practices
+
+### When to Leverage MCP Tools
+
+- **Before implementing new patterns**: Search for existing Solutions Constructs
+- **During security reviews**: Analyze CDK Nag suppressions and rules
+- **For AI/ML projects**: Find GenAI constructs for Bedrock, embeddings, etc.
+- **When stuck on CDK decisions**: Get general guidance and best practices

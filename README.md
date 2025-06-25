@@ -69,6 +69,8 @@ Welcome to the starting line of your next AWS CDK project. This repository is cr
 - 📏 **Best Practice Linting & Formatting**: Adopt coding best practices effortlessly with a pre-configured Biome setup [biome.jsonc](./biome.jsonc), maintaining high code quality and consistency.
 - 💻 **Branch-based Deployments**: Deploy multiple CDK stacks to the same AWS environments based on the Git branch. This enables you to easily test changes when multiple developers work on the same code base.
 - 📦 **Automated Dependency Management**: Dependabot creates grouped PRs, with auto-approval for passing checks using `hmarr/auto-approve-action@v4`, streamlining updates while maintaining project stability.
+- 🧠 **AWS CDK MCP Server Integration**: Enhanced with the [AWS CDK MCP Server](https://github.com/awslabs/mcp/blob/main/src/cdk-mcp-server/README.md) for intelligent CDK guidance, construct recommendations, and real-time best practices assistance.
+- 📋 **Always-On CDK Best Practices**: The `@cdk-best-practices.mdc` rule is enabled by default to ensure you consistently follow the architectural patterns and guidelines of this starterkit project.
 
 ## Setup Guide
 
@@ -176,6 +178,29 @@ Here is a brief explanation of what each section does:
 - `src/stacks`: Dedicated to defining stacks that represent collections of AWS resources (constructs). This allows for logical grouping of related resources, making it simpler to manage deployments and resource dependencies. Check out the [README in the stacks folder](./src/stacks/README.md) to read how you can instantiate new stacks.
 - `src/lib/main.ts`: This is where the CDK app is instantiated.
 - `test`: Is the location to store your unit or integration tests (powered by jest)
+
+## AWS CDK MCP Server Integration
+
+This starterkit is enhanced with the [AWS CDK MCP (Model Context Protocol) Server](https://github.com/awslabs/mcp/blob/main/src/cdk-mcp-server/README.md), providing intelligent assistance for your CDK development workflow.
+
+### What is MCP?
+
+The Model Context Protocol (MCP) is an open standard that enables AI assistants to securely access external data sources and tools. In the context of this CDK starterkit, it provides:
+
+- **Intelligent CDK Guidance**: Get real-time recommendations for CDK constructs and AWS best practices
+- **Construct Discovery**: Find and understand AWS Solutions Constructs and GenAI CDK patterns
+- **CDK Nag Integration**: Automatic security rule explanations and remediation guidance
+- **Best Practices Enforcement**: The `@cdk-best-practices.mdc` rule ensures you follow this starterkit's architectural patterns
+
+### Prerequisites
+
+To take advantage of the MCP integration, you'll need:
+
+- **Cursor IDE**: Download and install [Cursor](https://cursor.sh/) - an AI-powered code editor
+- **uv Package Manager**: Install uv via Homebrew: `brew install uv`
+- **Python 3.10**: Install Python 3.10 using uv: `uv python install 3.10`
+
+This integration transforms your development experience from manual documentation lookup to intelligent, context-aware assistance throughout your CDK journey.
 
 ## Branch-based Deployments (Ephemeral Environments)
 

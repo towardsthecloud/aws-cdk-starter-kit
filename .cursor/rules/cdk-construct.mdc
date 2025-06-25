@@ -1,0 +1,178 @@
+---
+description: This rule provides specialized guidance for creating new AWS CDK constructs and architecture patterns.
+globs:
+alwaysApply: false
+---
+# CDK Construct Creation Agent
+
+**Agent Activation**: This rule is active only when the user requests creating a new CDK construct or pattern.
+
+**Trigger Keywords**: construct, component, pattern, architecture, infrastructure component, serverless pattern, microservice, AWS service integration
+
+## Construct Creation Process
+
+### Requirements Gathering Questions
+
+When a user requests a new construct or pattern, **always ask clarifying questions first** if the requirements are not sufficiently detailed. Use this framework:
+
+#### Core Functionality Questions
+1. **Purpose & Scope**: What specific problem does this construct solve? What is the primary use case?
+2. **AWS Services**: Which AWS services need to be integrated? Any specific service requirements?
+3. **Data Flow**: How does data flow between components? What are the inputs and outputs?
+4. **Security Requirements**: What are the authentication, authorization, and encryption needs?
+5. **Performance Requirements**: What are the expected throughput, latency, and scaling requirements?
+
+#### Environment & Configuration Questions
+6. **Environment Differences**: Should behavior differ between dev/test/prod environments?
+7. **Configurability**: What aspects should be configurable vs. opinionated defaults?
+8. **Dependencies**: What external resources or other constructs does this depend on?
+9. **Integration**: How should this integrate with existing infrastructure?
+
+#### Operational Questions
+10. **Monitoring**: What metrics, alarms, and dashboards are needed?
+11. **Maintenance**: What backup, disaster recovery, or maintenance considerations apply?
+12. **Cost Optimization**: Are there specific cost constraints or optimization requirements?
+
+### Example Question Flow
+```
+User: "I need a construct for processing files"
+
+Required Follow-ups:
+- What type of files? (size, format, frequency)
+- What processing is needed? (transformation, validation, analysis)
+- Where do files come from and go to? (S3, database, external API)
+- What triggers the processing? (upload event, schedule, API call)
+- What are the performance requirements? (real-time, batch, throughput)
+- Any specific security or compliance requirements?
+```
+
+### Pre-Implementation: Architecture Pattern Discovery
+
+**Before creating any new construct**, always check for existing patterns using the AWS CDK MCP Server:
+
+#### Step 1: Search for AWS Solutions Constructs
+```typescript
+// Use MCP to search for existing patterns that match the requirements
+// Example searches:
+- "lambda dynamodb" - for serverless data processing patterns
+- "api gateway stepfunctions" - for workflow API patterns
+- "s3 eventbridge" - for event-driven file processing
+- "bedrock agent" - for AI/ML agent patterns
+```
+
+#### Step 2: Check GenAI Constructs (if applicable)
+```typescript
+// For AI/ML related constructs, search GenAI patterns:
+- "bedrock knowledgebase" - for RAG implementations
+- "opensearch vector" - for vector database patterns
+- "agent actiongroups" - for Bedrock agent components
+```
+
+#### Step 3: Evaluate Existing Solutions
+Before proceeding with custom development:
+
+1. **✅ Use AWS Solutions Construct** if it matches 80%+ of requirements
+2. **✅ Extend/Compose Solutions Constructs** if close but needs customization
+3. **✅ Create Custom Construct** only if no suitable pattern exists
+
+### Implementation Guidelines
+
+#### Custom Construct Creation Process
+
+1. **Extend BaseConstruct**: Always inherit from the existing `BaseConstruct`
+2. **Follow Naming Convention**: Use `{Purpose}Construct` pattern
+3. **Include Comprehensive Props**: Design a clear, well-typed props interface
+4. **Environment Awareness**: Use ternary operators for environment-specific behavior
+5. **Export Key Resources**: Make important resources accessible via public readonly properties
+
+#### Props Interface Design
+```typescript
+/**
+ * Comprehensive props interface with clear documentation
+ */
+export interface DatabaseConstructProps extends BaseConstructProps {
+  /** Database engine type and version */
+  readonly engine: DatabaseEngine;
+
+  /** Instance sizing configuration */
+  readonly instanceClass: InstanceClass;
+
+  /** Environment-specific backup configuration */
+  readonly backupRetention?: number;
+
+  /** Custom VPC or use default */
+  readonly vpc?: ec2.IVpc;
+
+  /** Application-specific database configuration */
+  readonly databaseName: string;
+
+  /** KMS key for encryption (will create if not provided) */
+  readonly encryptionKey?: kms.IKey;
+}
+```
+
+#### Resource Export Pattern
+```typescript
+export class DatabaseConstruct extends BaseConstruct {
+  /** Database instance for cross-construct access */
+  public readonly database: rds.DatabaseInstance;
+
+  /** Database endpoint for applications */
+  public readonly endpoint: string;
+
+  /** Database port for security group configuration */
+  public readonly port: number;
+
+  constructor(scope: Construct, id: string, props: DatabaseConstructProps) {
+    super(scope, id, props);
+
+    // Implementation...
+
+    // Export via SSM for cross-stack access
+    this.exportToSSM();
+  }
+
+  private exportToSSM(): void {
+    new ssm.StringParameter(this, 'DatabaseEndpoint', {
+      parameterName: `/constructs/${this.environment}/database/endpoint`,
+      stringValue: this.endpoint,
+    });
+  }
+}
+```
+
+### Testing Strategy
+
+Every custom construct must include:
+
+1. **Unit Tests**: Test construct creation and configuration
+2. **Integration Tests**: Test interaction with other AWS services
+3. **Snapshot Tests**: Ensure CloudFormation template consistency
+4. **Environment Tests**: Verify environment-specific behavior
+
+### Documentation Requirements
+
+For each custom construct, provide:
+
+1. **JSDoc Comments**: Comprehensive TypeScript documentation
+2. **Usage Examples**: Show common implementation patterns
+3. **Integration Guide**: How to use with other constructs
+4. **Environment Guide**: Environment-specific considerations
+
+## Design Principles
+
+- **Single Responsibility**: One clear purpose per construct
+- **Composable**: Easily combinable with other constructs
+- **Testable**: Unit testable in isolation
+- **Reusable**: Configurable for different use cases
+- **BaseConstruct**: Create constructs based on the existing BaseConstruct
+
+## Naming Convention
+```typescript
+/**
+ * Pattern: {Purpose}Construct
+ * All constructs should extend BaseConstruct for common functionality
+ */
+export class ApiGatewayConstruct extends BaseConstruct { }
+export class DatabaseConstruct extends BaseConstruct { }
+```

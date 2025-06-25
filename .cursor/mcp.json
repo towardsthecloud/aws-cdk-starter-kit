@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "awslabs.cdk-mcp-server": {
+      "command": "uvx awslabs.cdk-mcp-server@latest",
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
