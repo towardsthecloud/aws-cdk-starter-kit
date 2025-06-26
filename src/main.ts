@@ -39,5 +39,7 @@ new StarterStack(app, createEnvResourceName('StarterStack'), {
 
 // Tag all resources in CloudFormation with the environment name
 cdk.Tags.of(app).add('environment', `${environment}`);
+// Tag branch based deploys with the branch name to easily identify the branch in the AWS console
+process.env.GIT_BRANCH_REF ? cdk.Tags.of(app).add('branch', createEnvResourceName('b')) : null;
 
 app.synth();
