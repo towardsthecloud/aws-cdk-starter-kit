@@ -1,4 +1,4 @@
-import { awscdk } from 'projen';
+import { awscdk, JsonFile } from 'projen';
 import { DependabotScheduleInterval } from 'projen/lib/github';
 import { NodePackageManager } from 'projen/lib/javascript';
 import { IndentStyle, QuoteStyle, Semicolons, TrailingCommas } from 'projen/lib/javascript/biome/biome-config';
@@ -113,7 +113,6 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     '.env',
     '.pytest_cache',
     '.venv/',
-    '.vscode',
     '*.js',
     '*.manifest',
     '*.pyc',
@@ -122,6 +121,14 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     'coverage/',
     'dist/',
   ],
+});
+
+// Add VSCode extensions recommendation
+new JsonFile(project, '.vscode/extensions.json', {
+  obj: {
+    recommendations: ['dannysteenman.aws-cdk-extension-pack'],
+  },
+  marker: false,
 });
 
 // Configure the environments and their corresponding AWS account IDs

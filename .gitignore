@@ -36,7 +36,6 @@ jspm_packages/
 .env
 .pytest_cache
 .venv/
-.vscode
 *.js
 *.manifest
 *.pyc
@@ -65,6 +64,7 @@ junit.xml
 /cdk.out/
 .cdk.staging/
 .parcel-cache/
+!/.vscode/extensions.json
 !/.github/workflows/cdk-deploy-test.yml
 !/.github/workflows/cdk-deploy-test-branch.yml
 !/.github/workflows/cdk-destroy-test-branch.yml

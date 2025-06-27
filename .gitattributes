@@ -20,6 +20,7 @@
 /.projen/deps.json linguist-generated
 /.projen/files.json linguist-generated
 /.projen/tasks.json linguist-generated
+/.vscode/extensions.json linguist-generated
 /biome.jsonc linguist-generated
 /cdk.json linguist-generated
 /LICENSE linguist-generated
