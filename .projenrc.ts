@@ -131,23 +131,36 @@ new JsonFile(project, '.vscode/extensions.json', {
   marker: false,
 });
 
-// Configure the environments and their corresponding AWS account IDs
-const environmentConfigs: Partial<Record<Environment, EnvironmentConfig>> = {
-  test: { accountId: '987654321012', enableBranchDeploy: true },
-  production: { accountId: '123456789012', enableBranchDeploy: false },
-};
+/**
+ * Defines the environment configurations for the CDK application.
+ * The order of the environments in this array determines the deployment sequence in the pipeline.
+ * Each object in the array should conform to the EnvironmentConfig interface and include the environment name.
+ *
+ * @example
+ * // The 'test' environment will be deployed first, followed by 'production'.
+ * const environmentConfigs: (EnvironmentConfig & { name: Environment })[] = [
+ *   { name: 'test', accountId: '123456789012', enableBranchDeploy: true },
+ *   { name: 'production', accountId: '987654321012', enableBranchDeploy: false },
+ * ];
+ */
+const environmentConfigs: (EnvironmentConfig & { name: Environment })[] = [
+  { name: 'test', accountId: '987654321012', enableBranchDeploy: true },
+  { name: 'production', accountId: '123456789012', enableBranchDeploy: false },
+];
 
 /* Add npm run commands that you can use to deploy to each environment
 The environment variables are passed to the CDK CLI to deploy to the correct account and region
 The `cdkDeploymentTask` function is defined in the `src/bin/helper.ts` file
 You can now run a command like: `npm run dev:synth` to synthesize your aws cdk dev stacks */
 if (project.github) {
-  for (const [env, config] of Object.entries(environmentConfigs) as [Environment, EnvironmentConfig][]) {
+  const orderedEnvironments = environmentConfigs.map((env) => env.name);
+
+  for (const config of environmentConfigs) {
     // Adds customized 'npm run' commands for executing cdk synth, test, deploy and diff for each environment
     addCdkActionTask(project, {
       CDK_DEFAULT_ACCOUNT: config.accountId,
       CDK_DEFAULT_REGION: awsRegion,
-      ENVIRONMENT: env,
+      ENVIRONMENT: config.name,
       GITHUB_DEPLOY_ROLE: githubRole,
     });
 
@@ -156,7 +169,7 @@ if (project.github) {
       addCdkActionTask(project, {
         CDK_DEFAULT_ACCOUNT: config.accountId,
         CDK_DEFAULT_REGION: awsRegion,
-        ENVIRONMENT: env,
+        ENVIRONMENT: config.name,
         GITHUB_DEPLOY_ROLE: githubRole,
         GIT_BRANCH_REF: `$(echo \${GIT_BRANCH_REF:-$(git rev-parse --abbrev-ref HEAD)})`,
       });
@@ -167,10 +180,11 @@ if (project.github) {
       project.github,
       config.accountId,
       awsRegion,
-      env,
+      config.name,
       githubRole,
       nodeVersion,
       config.enableBranchDeploy,
+      orderedEnvironments,
     );
   }
 }

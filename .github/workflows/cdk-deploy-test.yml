@@ -2,10 +2,10 @@
 
 name: cdk-deploy-test
 on:
+  workflow_dispatch: {}
   push:
     branches:
       - main
-  workflow_dispatch: {}
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false

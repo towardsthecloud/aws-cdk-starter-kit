@@ -48,7 +48,7 @@ jobs:
         if: github.event.ref_type == 'branch' && github.event_name == 'delete'
         env:
           GIT_BRANCH_REF: ${{ steps.destroy-branch.outputs.DESTROY_BRANCH_NAME }}
-        run: npm run test:branch:destroy
+        run: npm run test:branch:destroy:all
       - name: Destroy Branch Stack (Pull Request Closure)
         if: github.event_name == 'pull_request'
         env:

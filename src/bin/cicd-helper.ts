@@ -35,9 +35,10 @@ export function createCdkDeploymentWorkflows(
   githubDeployRole: string,
   nodeVersion: string,
   deployForBranch = false,
+  orderedEnvironments: string[] = [],
 ) {
   // Always create the regular deployment workflow
-  createCdkDeploymentWorkflow(gh, account, region, env, githubDeployRole, nodeVersion, false);
+  createCdkDeploymentWorkflow(gh, account, region, env, githubDeployRole, nodeVersion, false, orderedEnvironments);
 
   if (deployForBranch) {
     // Create the branch deployment workflow
@@ -66,25 +67,40 @@ function createCdkDeploymentWorkflow(
   githubDeployRole: string,
   nodeVersion: string,
   deployForBranch: boolean,
+  orderedEnvironments: string[] = [],
 ): github.GithubWorkflow {
   const workflowName = `cdk-deploy-${env}${deployForBranch ? '-branch' : ''}`;
-  // Regular environment deployments are limited to prevent concurrent deployments that could cause conflicts
-  // Branch deployments can run in parallel since they're isolated by branch name
-  const workflowOptions = !deployForBranch ? { limitConcurrency: true } : undefined;
-  const cdkDeploymentWorkflow = new github.GithubWorkflow(gh, workflowName, workflowOptions);
+  const cdkDeploymentWorkflow = new github.GithubWorkflow(
+    gh,
+    workflowName,
+    !deployForBranch ? { limitConcurrency: true } : undefined,
+  );
 
-  const workflowTriggers = {
-    push: deployForBranch
-      ? { branches: ['**', ...BRANCH_EXCLUSIONS.map((branch) => `!${branch}`)] } // All branches except excluded ones
-      : env !== 'production'
-        ? { branches: ['main'] } // Non-production: trigger on main branch pushes
-        : undefined, // Production: manual only (no automatic triggers)
+  const workflowTriggers: Record<string, unknown> = {
     workflowDispatch: {}, // Always allow manual workflow dispatch
   };
 
+  if (deployForBranch) {
+    workflowTriggers.push = { branches: ['**', ...BRANCH_EXCLUSIONS.map((branch) => `!${branch}`)] };
+  } else {
+    const currentEnvIndex = orderedEnvironments.indexOf(env);
+    if (currentEnvIndex === 0) {
+      // First environment in the order, trigger on push to main
+      workflowTriggers.push = { branches: ['main'] };
+    } else if (currentEnvIndex > 0) {
+      // Not the first environment, trigger on completion of the previous environment's workflow
+      const previousEnv = orderedEnvironments[currentEnvIndex - 1];
+      workflowTriggers.workflowRun = {
+        workflows: [`cdk-deploy-${previousEnv}`],
+        types: ['completed'],
+        branches: ['main'],
+      };
+    }
+  }
+
   cdkDeploymentWorkflow.on(workflowTriggers);
 
-  const commonWorkflowSteps = getCommonWorkflowSteps(account, region, githubDeployRole, nodeVersion);
+  const commonWorkflowSteps = getCommonWorkflowSteps(nodeVersion, account, region, githubDeployRole);
 
   const deploymentSteps = [
     {
@@ -97,14 +113,19 @@ function createCdkDeploymentWorkflow(
     },
   ];
 
+  const jobConfig: github.workflows.Job = {
+    name: `Deploy CDK stacks to ${env} AWS account${deployForBranch ? ' (Branch)' : ''}`,
+    runsOn: COMMON_RUNS_ON,
+    environment: env,
+    permissions: COMMON_WORKFLOW_PERMISSIONS,
+    steps: [...commonWorkflowSteps, ...deploymentSteps],
+    ...(orderedEnvironments.indexOf(env) > 0 && !deployForBranch
+      ? { if: "github.event.workflow_run.conclusion == 'success'" }
+      : {}),
+  };
+
   cdkDeploymentWorkflow.addJobs({
-    deploy: {
-      name: `Deploy CDK stacks to ${env} AWS account${deployForBranch ? ' (Branch)' : ''}`,
-      runsOn: COMMON_RUNS_ON,
-      environment: env,
-      permissions: COMMON_WORKFLOW_PERMISSIONS,
-      steps: [...commonWorkflowSteps, ...deploymentSteps],
-    },
+    deploy: jobConfig,
   });
 
   return cdkDeploymentWorkflow;
@@ -146,7 +167,7 @@ function createCdkDestroyWorkflow(
 
   cdkDestroyWorkflow.on(workflowTriggers);
 
-  const commonWorkflowSteps = getCommonWorkflowSteps(account, region, githubDeployRole, nodeVersion);
+  const commonWorkflowSteps = getCommonWorkflowSteps(nodeVersion, account, region, githubDeployRole);
 
   const destroySteps = [
     {
@@ -166,7 +187,7 @@ function createCdkDestroyWorkflow(
     {
       name: 'Destroy Branch Stack (Branch Deletion)',
       if: "github.event.ref_type == 'branch' && github.event_name == 'delete'",
-      run: `npm run ${getTaskName(env, 'destroy', { isBranch: true })}`,
+      run: `npm run ${getTaskName(env, 'destroy', { isBranch: true, taskType: 'all' })}`,
       env: {
         GIT_BRANCH_REF: '${{ steps.destroy-branch.outputs.DESTROY_BRANCH_NAME }}',
       },
@@ -197,20 +218,20 @@ function createCdkDestroyWorkflow(
 }
 
 /**
- * Retrieves the common workflow steps for both the deployment and destruction workflows.
- * @param account - The AWS account ID to which the CDK stacks will be deployed/destroyed.
- * @param region - The AWS region to which the CDK stacks will be deployed/destroyed.
- * @param githubDeployRole - The name of the GitHub deploy role.
- * @param nodeVersion - The version of Node.js to be used for the deployment/destruction.
+ * Retrieves the common workflow steps for workflows.
+ * @param nodeVersion - The version of Node.js to be used.
+ * @param account - The AWS account ID (optional, for AWS workflows).
+ * @param region - The AWS region (optional, for AWS workflows).
+ * @param githubDeployRole - The name of the GitHub deploy role (optional, for AWS workflows).
  * @returns An array of common workflow steps.
  */
 function getCommonWorkflowSteps(
-  account: string | undefined,
-  region: string,
-  githubDeployRole: string,
-  nodeVersion: string | undefined,
+  nodeVersion: string,
+  account?: string,
+  region?: string,
+  githubDeployRole?: string,
 ): github.workflows.Step[] {
-  return [
+  const steps: github.workflows.Step[] = [
     {
       name: 'Checkout repository',
       uses: 'actions/checkout@v4',
@@ -219,21 +240,38 @@ function getCommonWorkflowSteps(
       name: 'Setup nodejs environment',
       uses: 'actions/setup-node@v4',
       with: {
-        'node-version': nodeVersion ? `>=${nodeVersion}` : undefined,
+        'node-version': nodeVersion ? `>=${nodeVersion}` : 'latest',
         cache: 'npm',
       },
     },
-    {
-      name: 'Configure AWS credentials',
-      uses: 'aws-actions/configure-aws-credentials@v4',
-      with: {
-        'role-to-assume': account ? `arn:aws:iam::${account}:role/${githubDeployRole}` : undefined,
-        'aws-region': region,
-      },
-    },
-    {
-      name: 'Install dependencies',
-      run: 'npm ci',
-    },
   ];
+
+  if (githubDeployRole && region && account) {
+    steps.push(getAwsCredentialsStep(account, region, githubDeployRole));
+  }
+
+  steps.push({
+    name: 'Install dependencies',
+    run: 'npm ci',
+  });
+
+  return steps;
+}
+
+/**
+ * Creates an AWS credentials configuration step.
+ * @param account - The AWS account ID.
+ * @param region - The AWS region.
+ * @param roleName - The name of the AWS role to assume.
+ * @returns A workflow step for configuring AWS credentials.
+ */
+function getAwsCredentialsStep(account: string | undefined, region: string, roleName: string): github.workflows.Step {
+  return {
+    name: 'Configure AWS credentials',
+    uses: 'aws-actions/configure-aws-credentials@v4',
+    with: {
+      'role-to-assume': account ? `arn:aws:iam::${account}:role/${roleName}` : undefined,
+      'aws-region': region,
+    },
+  };
 }
