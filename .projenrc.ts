@@ -158,7 +158,7 @@ if (project.github) {
         CDK_DEFAULT_REGION: awsRegion,
         ENVIRONMENT: env,
         GITHUB_DEPLOY_ROLE: githubRole,
-        GIT_BRANCH_REF: '$(git rev-parse --abbrev-ref HEAD)',
+        GIT_BRANCH_REF: `$(echo \${GIT_BRANCH_REF:-$(git rev-parse --abbrev-ref HEAD)})`,
       });
     }
 

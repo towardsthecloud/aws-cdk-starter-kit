@@ -371,7 +371,7 @@
         "CDK_DEFAULT_REGION": "us-east-1",
         "ENVIRONMENT": "test",
         "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
-        "GIT_BRANCH_REF": "$(git rev-parse --abbrev-ref HEAD)"
+        "GIT_BRANCH_REF": "$(echo ${GIT_BRANCH_REF:-$(git rev-parse --abbrev-ref HEAD)})"
       },
       "steps": [
         {
@@ -387,7 +387,7 @@
         "CDK_DEFAULT_REGION": "us-east-1",
         "ENVIRONMENT": "test",
         "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
-        "GIT_BRANCH_REF": "$(git rev-parse --abbrev-ref HEAD)"
+        "GIT_BRANCH_REF": "$(echo ${GIT_BRANCH_REF:-$(git rev-parse --abbrev-ref HEAD)})"
       },
       "steps": [
         {
@@ -404,7 +404,7 @@
         "CDK_DEFAULT_REGION": "us-east-1",
         "ENVIRONMENT": "test",
         "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
-        "GIT_BRANCH_REF": "$(git rev-parse --abbrev-ref HEAD)"
+        "GIT_BRANCH_REF": "$(echo ${GIT_BRANCH_REF:-$(git rev-parse --abbrev-ref HEAD)})"
       },
       "steps": [
         {
@@ -420,7 +420,7 @@
         "CDK_DEFAULT_REGION": "us-east-1",
         "ENVIRONMENT": "test",
         "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
-        "GIT_BRANCH_REF": "$(git rev-parse --abbrev-ref HEAD)"
+        "GIT_BRANCH_REF": "$(echo ${GIT_BRANCH_REF:-$(git rev-parse --abbrev-ref HEAD)})"
       },
       "steps": [
         {
@@ -437,7 +437,7 @@
         "CDK_DEFAULT_REGION": "us-east-1",
         "ENVIRONMENT": "test",
         "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
-        "GIT_BRANCH_REF": "$(git rev-parse --abbrev-ref HEAD)"
+        "GIT_BRANCH_REF": "$(echo ${GIT_BRANCH_REF:-$(git rev-parse --abbrev-ref HEAD)})"
       },
       "steps": [
         {
@@ -453,7 +453,7 @@
         "CDK_DEFAULT_REGION": "us-east-1",
         "ENVIRONMENT": "test",
         "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
-        "GIT_BRANCH_REF": "$(git rev-parse --abbrev-ref HEAD)"
+        "GIT_BRANCH_REF": "$(echo ${GIT_BRANCH_REF:-$(git rev-parse --abbrev-ref HEAD)})"
       },
       "steps": [
         {
@@ -470,7 +470,7 @@
         "CDK_DEFAULT_REGION": "us-east-1",
         "ENVIRONMENT": "test",
         "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
-        "GIT_BRANCH_REF": "$(git rev-parse --abbrev-ref HEAD)"
+        "GIT_BRANCH_REF": "$(echo ${GIT_BRANCH_REF:-$(git rev-parse --abbrev-ref HEAD)})"
       },
       "steps": [
         {
@@ -486,7 +486,7 @@
         "CDK_DEFAULT_REGION": "us-east-1",
         "ENVIRONMENT": "test",
         "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
-        "GIT_BRANCH_REF": "$(git rev-parse --abbrev-ref HEAD)"
+        "GIT_BRANCH_REF": "$(echo ${GIT_BRANCH_REF:-$(git rev-parse --abbrev-ref HEAD)})"
       },
       "steps": [
         {
