@@ -26,6 +26,7 @@ const COMMON_WORKFLOW_PERMISSIONS = {
  * @param githubDeployRole - The name of the GitHub deploy role.
  * @param nodeVersion - The version of Node.js to be used for the deployment.
  * @param deployForBranch - A boolean flag that determines whether the deployment should be done for a feature branch or the main branch.
+ * @param orderedEnvironments - An array of environment names in the order they should be deployed, used for creating chained workflows.
  */
 export function createCdkDeploymentWorkflows(
   gh: github.GitHub,
@@ -57,6 +58,7 @@ export function createCdkDeploymentWorkflows(
  * @param githubDeployRole - The name of the GitHub deploy role.
  * @param nodeVersion - The version of Node.js to be used for the deployment.
  * @param deployForBranch - A boolean flag that determines whether the deployment should be done for a feature branch or the main branch.
+ * @param orderedEnvironments - An array of environment names in the order they should be deployed, used for creating chained workflows.
  * @returns The created `github.GithubWorkflow` instance.
  */
 function createCdkDeploymentWorkflow(
@@ -93,7 +95,6 @@ function createCdkDeploymentWorkflow(
       workflowTriggers.workflowRun = {
         workflows: [`cdk-deploy-${previousEnv}`],
         types: ['completed'],
-        branches: ['main'],
       };
     }
   }
@@ -102,7 +103,7 @@ function createCdkDeploymentWorkflow(
 
   const commonWorkflowSteps = getCommonWorkflowSteps(nodeVersion, account, region, githubDeployRole);
 
-  const deploymentSteps = [
+  const deploymentSteps: github.workflows.Step[] = [
     {
       name: `Run CDK synth for the ${env.toUpperCase()} environment`,
       run: `npm run ${getTaskName(env, 'synth', { isBranch: deployForBranch })}`,
