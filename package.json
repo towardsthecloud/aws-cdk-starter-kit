@@ -1,5 +1,5 @@
 {
-  "name": "aws-cdk-starterkit",
+  "name": "aws-cdk-starter-kit",
   "description": "Create and deploy an AWS CDK app on your AWS account in less than 5 minutes using GitHub actions!",
   "scripts": {
     "biome": "npx projen biome",

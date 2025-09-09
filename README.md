@@ -1,10 +1,10 @@
-# [![AWS CDK Starterkit header](./icons/github-title-banner.png)](https://towardsthecloud.com)
+# [![AWS CDK Starter Kit header](./icons/github-title-banner.png)](https://towardsthecloud.com)
 
-# AWS CDK Starterkit
+# AWS CDK Starter Kit
 
-[![Build Status](https://github.com/towardsthecloud/aws-cdk-starterkit/actions/workflows/build.yml/badge.svg)](https://github.com/towardsthecloud/aws-cdk-starterkit/actions/workflows/build.yml)
+[![Build Status](https://github.com/towardsthecloud/aws-cdk-starter-kit/actions/workflows/build.yml/badge.svg)](https://github.com/towardsthecloud/aws-cdk-starter-kit/actions/workflows/build.yml)
 [![Biome Code Formatting](https://img.shields.io/badge/code_style-biome-brightgreen.svg)](https://biomejs.dev)
-[![Latest release](https://img.shields.io/github/release/dannysteenman/aws-cdk-starterkit.svg)](https://github.com/towardsthecloud/aws-cdk-starterkit/releases)
+[![Latest release](https://img.shields.io/github/release/dannysteenman/aws-cdk-starter-kit.svg)](https://github.com/towardsthecloud/aws-cdk-starter-kit/releases)
 
 Welcome to the starting line of your next AWS CDK project. This repository is crafted to supercharge your project's setup with AWS CDK TypeScript, projen, and GitHub actions, ensuring a smooth and efficient deployment to your AWS account.
 
@@ -124,7 +124,7 @@ However, as projects evolve to encompass multiple microservices and a variety of
 
 In such cases, adopting a more sophisticated AWS CDK project organization becomes critical. This ensures not only the ease of extensibility but also the smooth deployment of each component, thereby supporting a more robust development lifecycle and facilitating greater operational efficiency.
 
-To cater to these advanced needs, your AWS CDK project should adopt a modular structure. This is where the **AWS CDK starterkit** shines ✨.
+To cater to these advanced needs, your AWS CDK project should adopt a modular structure. This is where the **AWS CDK Starter Kit** shines ✨.
 
 Here's a closer look at how this structure enhances maintainability and scalability:
 
@@ -184,9 +184,9 @@ When you create a new feature branch and push it to the repository, the GitHub A
 
 Additionally, the workflow includes a separate task to destroy the CDK stacks for the feature branch when the branch is deleted or the pull request is closed, ensuring that the resources are cleaned up after the testing is complete.
 
-## AWS CDK Starterkit for Python Users
+## AWS CDK Starter Kit for Python Users
 
-> **Looking for the Python version of this AWS CDK starter kit?** Check out the [AWS CDK Python Starterkit](https://github.com/towardsthecloud/aws-cdk-python-starterkit) for a tailored experience that leverages the full power of AWS CDK with Python.
+> **Looking for the Python version of this AWS CDK starter kit?** Check out the [AWS CDK Python Starter Kit](https://github.com/towardsthecloud/aws-cdk-python-starter-kit) for a tailored experience that leverages the full power of AWS CDK with Python.
 
 ## Acknowledgements
 
