@@ -30,13 +30,13 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   authorOrganization: true,
   name: 'aws-cdk-starterkit',
   description: 'Create and deploy an AWS CDK app on your AWS account in less than 5 minutes using GitHub actions!',
-  cdkCliVersion: '2.1019.1', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
-  cdkVersion: '2.202.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
+  cdkCliVersion: '2.1029.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
+  cdkVersion: '2.214.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
   cdkVersionPinning: true,
   defaultReleaseBranch: 'main',
   packageManager: NodePackageManager.NPM,
   minNodeVersion: nodeVersion,
-  projenVersion: '0.94.0', // Find the latest projen version here: https://www.npmjs.com/package/projen
+  projenVersion: '0.95.6', // Find the latest projen version here: https://www.npmjs.com/package/projen
   projenrcTs: true,
   release: true,
   deps: ['cloudstructs'] /* Runtime dependencies of this module. */,
