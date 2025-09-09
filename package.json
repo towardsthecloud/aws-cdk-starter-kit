@@ -58,7 +58,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2",
     "@types/jest": "^29.5.12",
-    "@types/node": "^20",
+    "@types/node": "^22",
     "aws-cdk": "2.1019.1",
     "commit-and-tag-version": "^12",
     "esbuild": "^0.23.0",
@@ -75,7 +75,7 @@
     "constructs": "^10.0.5"
   },
   "engines": {
-    "node": ">= 20.18.1"
+    "node": ">= 22.18.0"
   },
   "license": "Apache-2.0",
   "publishConfig": {

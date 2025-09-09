@@ -6,7 +6,7 @@ import { createCdkDeploymentWorkflows } from './src/bin/cicd-helper';
 import { addCdkActionTask, type Environment, type EnvironmentConfig } from './src/bin/env-helper';
 
 // Set the minimum node version for AWS CDK and the GitHub actions workflow
-const nodeVersion = '20.18.1';
+const nodeVersion = '22.18.0';
 
 /* Define the AWS region for the CDK app and github workflows
 Default to us-east-1 if AWS_REGION is not set in your environment variables */
