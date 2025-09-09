@@ -64,6 +64,7 @@ junit.xml
 /cdk.out/
 .cdk.staging/
 .parcel-cache/
+!/.nvmrc
 !/.vscode/extensions.json
 !/.github/workflows/cdk-deploy-test.yml
 !/.github/workflows/cdk-deploy-test-branch.yml

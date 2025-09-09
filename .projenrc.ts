@@ -1,4 +1,4 @@
-import { awscdk, JsonFile } from 'projen';
+import { awscdk, JsonFile, TextFile } from 'projen';
 import { DependabotScheduleInterval } from 'projen/lib/github';
 import { NodePackageManager } from 'projen/lib/javascript';
 import { IndentStyle, QuoteStyle, Semicolons, TrailingCommas } from 'projen/lib/javascript/biome/biome-config';
@@ -121,6 +121,11 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     'coverage/',
     'dist/',
   ],
+});
+
+// Create .nvmrc file with the Node.js version (useful for autoswitching node environment locally)
+new TextFile(project, '.nvmrc', {
+  lines: [`v${nodeVersion}`],
 });
 
 // Add VSCode extensions recommendation
