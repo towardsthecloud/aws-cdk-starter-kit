@@ -12,7 +12,27 @@
       "src/**",
       "test/**",
       ".projenrc.ts",
-      "projenrc/**"
+      "projenrc/**",
+      "!.gitattributes",
+      "!.github/dependabot.yml",
+      "!.github/workflows/auto-approve.yml",
+      "!.github/workflows/build.yml",
+      "!.github/workflows/cdk-deploy-production.yml",
+      "!.github/workflows/cdk-deploy-test-branch.yml",
+      "!.github/workflows/cdk-deploy-test.yml",
+      "!.github/workflows/cdk-destroy-test-branch.yml",
+      "!.github/workflows/pull-request-lint.yml",
+      "!.github/workflows/release.yml",
+      "!.gitignore",
+      "!.mergify.yml",
+      "!.npmignore",
+      "!.nvmrc",
+      "!.projen/deps.json",
+      "!.projen/files.json",
+      "!.projen/tasks.json",
+      "!cdk.json",
+      "!tsconfig.dev.json",
+      "!tsconfig.json"
     ]
   },
   "formatter": {
