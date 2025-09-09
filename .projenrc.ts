@@ -8,8 +8,10 @@ import { addCdkActionTask, type Environment, type EnvironmentConfig } from './sr
 // Set the minimum node version for AWS CDK and the GitHub actions workflow
 const nodeVersion = '22.18.0';
 
-/* Define the AWS region for the CDK app and github workflows
-Default to us-east-1 if AWS_REGION is not set in your environment variables */
+/**
+ * Define the AWS region for the CDK app and github workflows
+ * Default to us-east-1 if AWS_REGION is not set in your environment variables
+ */
 const awsRegion = process.env.AWS_REGION || 'us-east-1';
 
 /**
@@ -39,7 +41,8 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   minNodeVersion: nodeVersion,
   projenrcTs: true,
   release: true,
-  deps: ['cloudstructs'] /* Runtime dependencies of this module. */,
+  deps: ['cloudstructs', 'netmask'], // Runtime dependencies of this module
+  devDeps: ['@types/netmask'], // Development dependencies of this module
   biome: true,
   biomeOptions: {
     biomeConfig: {
@@ -153,10 +156,12 @@ const environmentConfigs: (EnvironmentConfig & { name: Environment })[] = [
   { name: 'production', accountId: '123456789012', enableBranchDeploy: false },
 ];
 
-/* Add npm run commands that you can use to deploy to each environment
-The environment variables are passed to the CDK CLI to deploy to the correct account and region
-The `cdkDeploymentTask` function is defined in the `src/bin/helper.ts` file
-You can now run a command like: `npm run dev:synth` to synthesize your aws cdk dev stacks */
+/**
+ * Add npm run commands that you can use to deploy to each environment
+ * The environment variables are passed to the CDK CLI to deploy to the correct account and region
+ * The `cdkDeploymentTask` function is defined in the `src/bin/helper.ts` file
+ * You can now run a command like: `npm run dev:synth` to synthesize your aws cdk dev stacks
+ */
 if (project.github) {
   const orderedEnvironments = environmentConfigs.map((env) => env.name);
 
