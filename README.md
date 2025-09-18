@@ -71,7 +71,10 @@ Welcome to the starting line of your next AWS CDK project. This repository is cr
 
 ## Setup Guide
 
-This project requires a atleast **Node.js version 20**.
+> [!NOTE]
+> Looking for the full setup guide? Visit the detailed documentation at [towardsthecloud.com/docs/aws-cdk-starter-kit](https://towardsthecloud.com/docs/aws-cdk-starter-kit).
+
+This project requires a atleast **Node.js version 22**.
 
 All the config that is needed to personalise the CDK App to your environment is defined in the [.projenrc.ts file](./.projenrc.ts).
 
