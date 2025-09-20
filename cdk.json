@@ -1,5 +1,8 @@
 {
   "app": "npx ts-node -P tsconfig.json --prefer-ts-exts src/main.ts",
+  "context": {
+    "cli-telemetry": false
+  },
   "output": "cdk.out",
   "build": "npx projen bundle",
   "watch": {

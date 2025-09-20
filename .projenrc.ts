@@ -33,9 +33,9 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   name: 'aws-cdk-starter-kit',
   description: 'Create and deploy an AWS CDK app on your AWS account in less than 5 minutes using GitHub actions!',
   cdkVersionPinning: true,
-  cdkCliVersion: '2.1029.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
-  cdkVersion: '2.214.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
-  projenVersion: '0.95.6', // Find the latest projen version here: https://www.npmjs.com/package/projen
+  cdkCliVersion: '2.1029.2', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
+  cdkVersion: '2.215.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
+  projenVersion: '0.96.2', // Find the latest projen version here: https://www.npmjs.com/package/projen
   defaultReleaseBranch: 'main',
   packageManager: NodePackageManager.NPM,
   minNodeVersion: nodeVersion,
@@ -44,6 +44,9 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   deps: ['cloudstructs', 'netmask'], // Runtime dependencies of this module
   devDeps: ['@types/netmask'], // Development dependencies of this module
   biome: true,
+  context: {
+    'cli-telemetry': false, // Disable AWS CDK CLI telemetry, see: https://github.com/aws/aws-cdk/issues/34892
+  },
   biomeOptions: {
     biomeConfig: {
       formatter: {
