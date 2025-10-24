@@ -2,7 +2,7 @@ import { awscdk, JsonFile, TextFile } from 'projen';
 import { DependabotScheduleInterval } from 'projen/lib/github';
 import { NodePackageManager } from 'projen/lib/javascript';
 import { IndentStyle, QuoteStyle, Semicolons, TrailingCommas } from 'projen/lib/javascript/biome/biome-config';
-import { createCdkDeploymentWorkflows } from './src/bin/cicd-helper';
+import { createCdkDeploymentWorkflows, createCdkDiffPrWorkflow } from './src/bin/cicd-helper';
 import { addCdkActionTask, type Environment, type EnvironmentConfig } from './src/bin/env-helper';
 
 // Set the minimum node version for AWS CDK and the GitHub actions workflow
@@ -195,6 +195,16 @@ if (project.github) {
       orderedEnvironments,
     );
   }
+
+  // Create CDK diff PR workflow (once, using the highest environment)
+  createCdkDiffPrWorkflow(
+    project.github,
+    environmentConfigs[environmentConfigs.length - 1].accountId, // Uses the account that should be deployed to last (usually production)
+    awsRegion,
+    githubRole,
+    nodeVersion,
+    orderedEnvironments,
+  );
 }
 
 project.synth();

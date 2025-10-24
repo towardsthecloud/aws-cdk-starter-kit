@@ -12,6 +12,106 @@ const COMMON_WORKFLOW_PERMISSIONS = {
 };
 
 /**
+ * Creates a GitHub workflow for generating CDK diff on pull requests.
+ *
+ * This workflow triggers on pull_request_target events to the main branch and:
+ * - Checks out the PR branch
+ * - Runs CDK diff against the highest environment in orderedEnvironments
+ * - Posts the diff as a comment on the pull request
+ *
+ * @param gh - An instance of the `github.GitHub` class, used to create the GitHub workflow.
+ * @param account - The AWS account ID to compare against.
+ * @param region - The AWS region to use for the diff.
+ * @param githubDeployRole - The name of the GitHub deploy role.
+ * @param nodeVersion - The version of Node.js to be used.
+ * @param orderedEnvironments - An array of environment names in deployment order. The last environment will be used for the diff.
+ * @returns The created `github.GithubWorkflow` instance.
+ */
+export function createCdkDiffPrWorkflow(
+  gh: github.GitHub,
+  account: string,
+  region: string,
+  githubDeployRole: string,
+  nodeVersion: string,
+  orderedEnvironments: string[],
+): github.GithubWorkflow {
+  const workflowName = 'cdk-diff-pr';
+  const cdkDiffWorkflow = new github.GithubWorkflow(gh, workflowName);
+
+  // Get the highest environment (last in the ordered list)
+  const highestEnv = orderedEnvironments[orderedEnvironments.length - 1] || 'production';
+
+  const workflowTriggers = {
+    pullRequestTarget: {
+      branches: ['main'],
+    },
+  };
+
+  cdkDiffWorkflow.on(workflowTriggers);
+
+  // Extended permissions for PR comments
+  const diffWorkflowPermissions = {
+    ...COMMON_WORKFLOW_PERMISSIONS,
+    pullRequests: github.workflows.JobPermission.WRITE,
+    packages: github.workflows.JobPermission.READ,
+  };
+
+  const checkoutStep: github.workflows.Step = {
+    name: 'Checkout repository',
+    uses: 'actions/checkout@v5',
+    with: {
+      ref: '${{ github.event.pull_request.head.sha }}',
+      'fetch-depth': 0,
+    },
+  };
+
+  const setupNodeStep: github.workflows.Step = {
+    name: 'Setup nodejs environment',
+    uses: 'actions/setup-node@v4',
+    with: {
+      'node-version': nodeVersion ? `>=${nodeVersion}` : 'latest',
+      cache: 'npm',
+    },
+  };
+
+  const awsCredentialsStep = getAwsCredentialsStep(account, region, githubDeployRole);
+
+  const installDepsStep: github.workflows.Step = {
+    name: 'Install dependencies',
+    run: 'npm ci',
+  };
+
+  const diffSteps: github.workflows.Step[] = [
+    {
+      name: 'CDK diff and notify PR',
+      run: `npm run ${getTaskName(highestEnv, 'diff', { taskType: 'all' })} > cdk-diff.txt 2>&1 || true`,
+    },
+    {
+      name: 'Post CDK Diff Comment in PR',
+      uses: 'towardsthecloud/aws-cdk-diff-pr-commenter@v1',
+      with: {
+        'diff-file': 'cdk-diff.txt',
+        header: `CDK Diff for ${highestEnv} in ${region}`,
+      },
+    },
+  ];
+
+  cdkDiffWorkflow.addJobs({
+    deploy: {
+      name: `CDK diff PR branch with ${highestEnv} environment (via main)`,
+      runsOn: COMMON_RUNS_ON,
+      permissions: diffWorkflowPermissions,
+      env: {
+        AWS_REGION: region,
+      },
+      steps: [checkoutStep, setupNodeStep, awsCredentialsStep, installDepsStep, ...diffSteps],
+    },
+  });
+
+  return cdkDiffWorkflow;
+}
+
+/**
  * Creates GitHub workflows for deploying and destroying AWS CDK stacks.
  *
  * Creates different workflow configurations based on the environment and branch deployment settings:
@@ -235,7 +335,7 @@ function getCommonWorkflowSteps(
   const steps: github.workflows.Step[] = [
     {
       name: 'Checkout repository',
-      uses: 'actions/checkout@v4',
+      uses: 'actions/checkout@v5',
     },
     {
       name: 'Setup nodejs environment',

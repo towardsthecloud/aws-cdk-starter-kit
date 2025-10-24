@@ -22,7 +22,7 @@ jobs:
     if: github.head_ref != 'main' || (github.event.ref_type == 'branch' && github.event_name == 'delete') || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup nodejs environment
         uses: actions/setup-node@v4
         with:

@@ -63,6 +63,7 @@ Welcome to the starting line of your next AWS CDK project. This repository is cr
 - 🧹 **Preconfigured TypeScript Excellence**: Hit the ground running with pre-set compiler options in [tsconfig.json](./tsconfig.json), ensuring your code is clean, efficient, and error-free from the start.
 - 📏 **Best Practice Linting & Formatting**: Adopt coding best practices effortlessly with a pre-configured Biome setup [biome.jsonc](./biome.jsonc), maintaining high code quality and consistency.
 - 💻 **Branch-based Deployments**: Deploy multiple CDK stacks to the same AWS environments based on the Git branch. This enables you to easily test changes when multiple developers work on the same code base.
+- 🔍 **Automated CDK Diff on PRs**: Automatically runs `cdk diff` on pull requests to the main branch and posts the infrastructure changes as a comment. This allows you to validate your infrastructure changes before merging. Powered by our custom-built [AWS CDK Diff PR Commenter](https://github.com/marketplace/actions/aws-cdk-diff-pr-commenter) GitHub Action.
 - 📦 **Automated Dependency Management**: Dependabot creates grouped PRs, with auto-approval for passing checks using `hmarr/auto-approve-action@v4`, streamlining updates while maintaining project stability.
 
 ## Setup Guide
