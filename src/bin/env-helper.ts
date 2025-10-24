@@ -2,9 +2,7 @@ import type { awscdk } from 'projen';
 
 /** Represents the possible deployment environments. */
 export type Environment = 'sandbox' | 'development' | 'test' | 'staging' | 'production';
-
-/** Supported CDK actions for task generation. */
-export const SUPPORTED_CDK_ACTIONS = ['synth', 'diff', 'deploy', 'destroy', 'ls'] as const;
+export const SUPPORTED_CDK_ACTIONS = ['synth', 'diff', 'deploy', 'deploy:hotswap', 'destroy', 'ls'] as const;
 
 /** Configuration settings for a specific environment. */
 export interface EnvironmentConfig {
@@ -55,13 +53,14 @@ export function getTaskName(
 }
 
 /**
- * Adds customized 'npm run' commands for executing AWS CDK actions (synth, diff, deploy, destroy, ls)
+ * Adds customized 'npm run' commands for executing AWS CDK actions (synth, diff, deploy, deploy:hotswap, destroy, ls)
  * for a specific environment and branch (if applicable).
  *
  * Creates different task variants:
  * - For synth/ls: Single task that operates on all stacks
- * - For deploy/destroy/diff: Two variants (:all for all stacks, :stack for specific stacks)
+ * - For deploy/destroy/diff/deploy:hotswap: Two variants (:all for all stacks, :stack for specific stacks)
  * - Branch deployments get "branch" in the task name when GIT_BRANCH_REF is present
+ * - Hotswap deployments are only available for branch deployments (when GIT_BRANCH_REF is present)
  *
  * @param cdkProject - The `AwsCdkTypeScriptApp` instance.
  * @param targetAccount - An object containing the environment-specific configuration,
@@ -72,6 +71,7 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
     synth: 'cdk synth',
     destroy: 'cdk destroy --force',
     deploy: 'cdk deploy --require-approval never',
+    'deploy:hotswap': 'cdk deploy --hotswap --require-approval never',
     diff: 'cdk diff',
     ls: 'cdk ls',
   } as const;
@@ -83,6 +83,11 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
   const isBranch = !!targetAccount.GIT_BRANCH_REF;
 
   for (const action of SUPPORTED_CDK_ACTIONS) {
+    // Skip hotswap action if not a branch deployment
+    if (action === 'deploy:hotswap' && !isBranch) {
+      continue;
+    }
+
     const execCommand = commandMap[action];
     const baseTaskName = getTaskName(targetAccount.ENVIRONMENT, action, { isBranch });
 
@@ -93,14 +98,15 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
         exec: execCommand,
       });
     } else {
+      const actionLabel = action === 'deploy:hotswap' ? 'hotswap deploy' : action;
       cdkProject.addTask(getTaskName(targetAccount.ENVIRONMENT, action, { isBranch, taskType: 'all' }), {
-        description: createDescription(action, 'all stacks'),
+        description: createDescription(actionLabel, 'all stacks'),
         env: targetAccount,
         exec: `${execCommand} --all`,
       });
 
       cdkProject.addTask(getTaskName(targetAccount.ENVIRONMENT, action, { isBranch, taskType: 'stack' }), {
-        description: createDescription(action, 'specific stack(s)'),
+        description: createDescription(actionLabel, 'specific stack(s)'),
         env: targetAccount,
         exec: execCommand,
         receiveArgs: true,

@@ -379,6 +379,39 @@
         }
       ]
     },
+    "test:branch:deploy:hotswap:all": {
+      "name": "test:branch:deploy:hotswap:all",
+      "description": "Hotswap deploy all stacks on the TEST account",
+      "env": {
+        "CDK_DEFAULT_ACCOUNT": "987654321012",
+        "CDK_DEFAULT_REGION": "us-east-1",
+        "ENVIRONMENT": "test",
+        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
+        "GIT_BRANCH_REF": "$(echo ${GIT_BRANCH_REF:-$(git rev-parse --abbrev-ref HEAD)})"
+      },
+      "steps": [
+        {
+          "exec": "cdk deploy --hotswap --require-approval never --all"
+        }
+      ]
+    },
+    "test:branch:deploy:hotswap:stack": {
+      "name": "test:branch:deploy:hotswap:stack",
+      "description": "Hotswap deploy specific stack(s) on the TEST account",
+      "env": {
+        "CDK_DEFAULT_ACCOUNT": "987654321012",
+        "CDK_DEFAULT_REGION": "us-east-1",
+        "ENVIRONMENT": "test",
+        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
+        "GIT_BRANCH_REF": "$(echo ${GIT_BRANCH_REF:-$(git rev-parse --abbrev-ref HEAD)})"
+      },
+      "steps": [
+        {
+          "exec": "cdk deploy --hotswap --require-approval never",
+          "receiveArgs": true
+        }
+      ]
+    },
     "test:branch:deploy:stack": {
       "name": "test:branch:deploy:stack",
       "description": "Deploy specific stack(s) on the TEST account",

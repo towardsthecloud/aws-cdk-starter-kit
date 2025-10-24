@@ -29,6 +29,8 @@
     "synth:silent": "npx projen synth:silent",
     "test": "npx projen test",
     "test:branch:deploy:all": "npx projen test:branch:deploy:all",
+    "test:branch:deploy:hotswap:all": "npx projen test:branch:deploy:hotswap:all",
+    "test:branch:deploy:hotswap:stack": "npx projen test:branch:deploy:hotswap:stack",
     "test:branch:deploy:stack": "npx projen test:branch:deploy:stack",
     "test:branch:destroy:all": "npx projen test:branch:destroy:all",
     "test:branch:destroy:stack": "npx projen test:branch:destroy:stack",
