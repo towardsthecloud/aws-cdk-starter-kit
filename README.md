@@ -77,7 +77,7 @@ All the config that is needed to personalise the CDK App to your environment is 
 
 **To get started, follow these steps:**
 
-1. Fork / clone this repo
+1. Click the green ["Use this template"](https://github.com/new?template_name=aws-cdk-starter-kit&template_owner=towardsthecloud) button to create a new repository based on this starter kit.
 
 2. Add a Personal Access Token to the repository settings on GitHub, follow these [instructions for setting up a fine-grained personal access token](https://projen.io/docs/integrations/github/#fine-grained-personal-access-token-beta).
 
