@@ -16,7 +16,6 @@ jobs:
     name: Deploy CDK stacks to production AWS account
     runs-on: ubuntu-latest
     permissions:
-      actions: write
       contents: read
       id-token: write
     environment: production

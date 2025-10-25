@@ -14,7 +14,6 @@ jobs:
     name: Deploy CDK stacks to test AWS account
     runs-on: ubuntu-latest
     permissions:
-      actions: write
       contents: read
       id-token: write
     environment: test

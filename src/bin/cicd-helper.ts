@@ -6,7 +6,6 @@ const COMMON_RUNS_ON = ['ubuntu-latest'];
 const BRANCH_EXCLUSIONS = ['main', 'hotfix/*', 'github-actions/*', 'dependabot/**'];
 /** Standard permissions required for CDK deployment workflows. */
 const COMMON_WORKFLOW_PERMISSIONS = {
-  actions: github.workflows.JobPermission.WRITE,
   contents: github.workflows.JobPermission.READ,
   idToken: github.workflows.JobPermission.WRITE,
 };
@@ -49,37 +48,19 @@ export function createCdkDiffPrWorkflow(
 
   cdkDiffWorkflow.on(workflowTriggers);
 
-  // Extended permissions for PR comments
+  // Extend common permissions with PR write access for posting comments
   const diffWorkflowPermissions = {
     ...COMMON_WORKFLOW_PERMISSIONS,
     pullRequests: github.workflows.JobPermission.WRITE,
-    packages: github.workflows.JobPermission.READ,
   };
 
-  const checkoutStep: github.workflows.Step = {
-    name: 'Checkout repository',
-    uses: 'actions/checkout@v5',
-    with: {
-      ref: '${{ github.event.pull_request.head.sha }}',
-      'fetch-depth': 0,
-    },
-  };
-
-  const setupNodeStep: github.workflows.Step = {
-    name: 'Setup nodejs environment',
-    uses: 'actions/setup-node@v4',
-    with: {
-      'node-version': nodeVersion ? `>=${nodeVersion}` : 'latest',
-      cache: 'npm',
-    },
-  };
-
-  const awsCredentialsStep = getAwsCredentialsStep(account, region, githubDeployRole);
-
-  const installDepsStep: github.workflows.Step = {
-    name: 'Install dependencies',
-    run: 'npm ci',
-  };
+  const commonSteps = getCommonWorkflowSteps(
+    nodeVersion,
+    account,
+    region,
+    githubDeployRole,
+    '${{ github.event.pull_request.head.sha }}',
+  );
 
   const diffSteps: github.workflows.Step[] = [
     {
@@ -104,7 +85,7 @@ export function createCdkDiffPrWorkflow(
       env: {
         AWS_REGION: region,
       },
-      steps: [checkoutStep, setupNodeStep, awsCredentialsStep, installDepsStep, ...diffSteps],
+      steps: [...commonSteps, ...diffSteps],
     },
   });
 
@@ -319,11 +300,60 @@ function createCdkDestroyWorkflow(
 }
 
 /**
+ * Creates a checkout step with optional configuration.
+ * @param ref - Optional git ref to checkout.
+ * @returns A workflow step for checking out the repository.
+ */
+function getCheckoutStep(ref?: string): github.workflows.Step {
+  const step: github.workflows.Step = {
+    name: 'Checkout repository',
+    uses: 'actions/checkout@v5',
+  };
+
+  if (ref) {
+    return {
+      ...step,
+      with: { ref },
+    };
+  }
+
+  return step;
+}
+
+/**
+ * Creates a Node.js setup step.
+ * @param nodeVersion - The version of Node.js to be used.
+ * @returns A workflow step for setting up Node.js.
+ */
+function getSetupNodeStep(nodeVersion: string): github.workflows.Step {
+  return {
+    name: 'Setup nodejs environment',
+    uses: 'actions/setup-node@v4',
+    with: {
+      'node-version': nodeVersion ? `>=${nodeVersion}` : 'latest',
+      cache: 'npm',
+    },
+  };
+}
+
+/**
+ * Creates an install dependencies step.
+ * @returns A workflow step for installing npm dependencies.
+ */
+function getInstallDepsStep(): github.workflows.Step {
+  return {
+    name: 'Install dependencies',
+    run: 'npm ci',
+  };
+}
+
+/**
  * Retrieves the common workflow steps for workflows.
  * @param nodeVersion - The version of Node.js to be used.
  * @param account - The AWS account ID (optional, for AWS workflows).
  * @param region - The AWS region (optional, for AWS workflows).
  * @param githubDeployRole - The name of the GitHub deploy role (optional, for AWS workflows).
+ * @param checkoutRef - Optional git ref to checkout (e.g., PR SHA).
  * @returns An array of common workflow steps.
  */
 function getCommonWorkflowSteps(
@@ -331,30 +361,15 @@ function getCommonWorkflowSteps(
   account?: string,
   region?: string,
   githubDeployRole?: string,
+  checkoutRef?: string,
 ): github.workflows.Step[] {
-  const steps: github.workflows.Step[] = [
-    {
-      name: 'Checkout repository',
-      uses: 'actions/checkout@v5',
-    },
-    {
-      name: 'Setup nodejs environment',
-      uses: 'actions/setup-node@v4',
-      with: {
-        'node-version': nodeVersion ? `>=${nodeVersion}` : 'latest',
-        cache: 'npm',
-      },
-    },
-  ];
+  const steps: github.workflows.Step[] = [getCheckoutStep(checkoutRef), getSetupNodeStep(nodeVersion)];
 
   if (githubDeployRole && region && account) {
     steps.push(getAwsCredentialsStep(account, region, githubDeployRole));
   }
 
-  steps.push({
-    name: 'Install dependencies',
-    run: 'npm ci',
-  });
+  steps.push(getInstallDepsStep());
 
   return steps;
 }

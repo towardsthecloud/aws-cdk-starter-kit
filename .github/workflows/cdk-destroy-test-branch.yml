@@ -15,7 +15,6 @@ jobs:
     name: Remove deployment of feature branch
     runs-on: ubuntu-latest
     permissions:
-      actions: write
       contents: read
       id-token: write
     environment: test
