@@ -21,7 +21,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup nodejs environment
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ">=22.18.0"
           cache: npm
@@ -33,9 +33,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: CDK diff and notify PR
-        run: npm run production:diff:all > cdk-diff.txt 2>&1 || true
+        run: npm run production:diff:all > cdk-diff-output.txt 2>&1 || true
       - name: Post CDK Diff Comment in PR
         uses: towardsthecloud/aws-cdk-diff-pr-commenter@v1
         with:
-          diff-file: cdk-diff.txt
+          diff-file: cdk-diff-output.txt
+          aws-region: us-east-1
           header: CDK Diff for production in us-east-1

@@ -65,13 +65,14 @@ export function createCdkDiffPrWorkflow(
   const diffSteps: github.workflows.Step[] = [
     {
       name: 'CDK diff and notify PR',
-      run: `npm run ${getTaskName(highestEnv, 'diff', { taskType: 'all' })} > cdk-diff.txt 2>&1 || true`,
+      run: `npm run ${getTaskName(highestEnv, 'diff', { taskType: 'all' })} > cdk-diff-output.txt 2>&1 || true`,
     },
     {
       name: 'Post CDK Diff Comment in PR',
       uses: 'towardsthecloud/aws-cdk-diff-pr-commenter@v1',
       with: {
-        'diff-file': 'cdk-diff.txt',
+        'diff-file': 'cdk-diff-output.txt',
+        'aws-region': `${region}`,
         header: `CDK Diff for ${highestEnv} in ${region}`,
       },
     },
@@ -328,7 +329,7 @@ function getCheckoutStep(ref?: string): github.workflows.Step {
 function getSetupNodeStep(nodeVersion: string): github.workflows.Step {
   return {
     name: 'Setup nodejs environment',
-    uses: 'actions/setup-node@v4',
+    uses: 'actions/setup-node@v6',
     with: {
       'node-version': nodeVersion ? `>=${nodeVersion}` : 'latest',
       cache: 'npm',
