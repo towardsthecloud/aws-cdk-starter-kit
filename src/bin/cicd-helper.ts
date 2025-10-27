@@ -34,7 +34,7 @@ export function createCdkDiffPrWorkflow(
   nodeVersion: string,
   orderedEnvironments: string[],
 ): github.GithubWorkflow {
-  const workflowName = 'cdk-diff-pr';
+  const workflowName = 'cdk-diff-pr-comment';
   const cdkDiffWorkflow = new github.GithubWorkflow(gh, workflowName);
 
   // Get the highest environment (last in the ordered list)

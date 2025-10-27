@@ -70,5 +70,5 @@ junit.xml
 !/.github/workflows/cdk-deploy-test-branch.yml
 !/.github/workflows/cdk-destroy-test-branch.yml
 !/.github/workflows/cdk-deploy-production.yml
-!/.github/workflows/cdk-diff-pr.yml
+!/.github/workflows/cdk-diff-pr-comment.yml
 !/.projenrc.ts
