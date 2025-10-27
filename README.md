@@ -4,7 +4,7 @@
 
 [![Build Status](https://github.com/towardsthecloud/aws-cdk-starter-kit/actions/workflows/build.yml/badge.svg)](https://github.com/towardsthecloud/aws-cdk-starter-kit/actions/workflows/build.yml)
 [![Biome Code Formatting](https://img.shields.io/badge/code_style-biome-brightgreen.svg)](https://biomejs.dev)
-[![Latest release](https://img.shields.io/github/release/dannysteenman/aws-cdk-starter-kit.svg)](https://github.com/towardsthecloud/aws-cdk-starter-kit/releases)
+[![Latest release](https://img.shields.io/github/release/towardsthecloud/aws-cdk-starter-kit.svg)](https://github.com/towardsthecloud/aws-cdk-starter-kit/releases)
 
 Welcome to the starting line of your next AWS CDK project. This repository is crafted to supercharge your project's setup with AWS CDK TypeScript, projen, and GitHub actions, ensuring a smooth and efficient deployment to your AWS account.
 
@@ -53,18 +53,17 @@ Welcome to the starting line of your next AWS CDK project. This repository is cr
 > </details>
 <!-- TIP-LIST:END -->
 
-## Features
+## 🚀 Features
 
-- ⚡ **Rapid Setup**: Jumpstart your project within minutes by tweaking a [single configuration file](./.projenrc.ts). Spend less time on boilerplate and more on building.
-- 🤹‍♂️ **Multi-Account Flexibility**: Ready for enterprises, this starter kit supports multi-account setups right from the start, enabling scalable and segregated cloud environments.
-- 🤖 **Automated Deploy Pipelines**: Embrace CI/CD with out-of-the-box GitHub Actions workflows, automating your deployment processes for efficiency and reliability.
-- 🏗️ **Project structure**: The [project is structured](#project-structure) in a clean and intuitive way that allows you to easily manage your constructs and stacks for this CDK App.
-- 🛡️ **Seamless Security**: Leverage OpenID Connect for secure AWS deployments. Authenticate your GitHub Actions workflows directly with AWS, eliminating the need for stored credentials or long-lived secrets.
-- 🧹 **Preconfigured TypeScript Excellence**: Hit the ground running with pre-set compiler options in [tsconfig.json](./tsconfig.json), ensuring your code is clean, efficient, and error-free from the start.
-- 📏 **Best Practice Linting & Formatting**: Adopt coding best practices effortlessly with a pre-configured Biome setup [biome.jsonc](./biome.jsonc), maintaining high code quality and consistency.
-- 💻 **Branch-based Deployments**: Deploy multiple CDK stacks to the same AWS environments based on the Git branch. This enables you to easily test changes when multiple developers work on the same code base.
-- 🔍 **Automated CDK Diff on PRs**: Automatically runs `cdk diff` on pull requests to the main branch and posts the infrastructure changes as a comment. This allows you to validate your infrastructure changes before merging. Powered by our custom-built [AWS CDK Diff PR Commenter](https://github.com/marketplace/actions/aws-cdk-diff-pr-commenter) GitHub Action.
-- 📦 **Automated Dependency Management**: Dependabot creates grouped PRs, with auto-approval for passing checks using `hmarr/auto-approve-action@v4`, streamlining updates while maintaining project stability.
+- **⚡ Rapid Setup**: Jumpstart your project within minutes by tweaking a [single configuration file (projen)](./.projenrc.ts)
+  - Preconfigured TypeScript with optimized compiler settings in [tsconfig.json](./tsconfig.json)
+  - Pre-configured linting & formatting with [biome.jsonc](./biome.jsonc) for code quality
+  - Clean [project structure](#project-structure) for easy management of constructs and stacks
+- **🛡️ Seamless Security**: OIDC authentication for keyless AWS deployments - no stored credentials or long-lived secrets required
+- **🤖 Automated CI/CD**: Out-of-the-box GitHub Actions workflows with multi-account support for enterprise-ready deployments
+- **💬 Automated CDK Diff on PRs**: [CDK diff outputs](https://github.com/marketplace/actions/aws-cdk-diff-pr-commenter) are automatically posted to your pull requests for easy infrastructure change reviews
+- **💻 Branch-based Deployments**: Deploy multiple CDK stacks to the same AWS environments based on Git branch for an improved multi-developer workflow
+- **📦 Automated Dependency Management**: Dependabot creates grouped PRs with auto-approval for passing checks, streamlining updates while maintaining stability
 
 ## Setup Guide
 
