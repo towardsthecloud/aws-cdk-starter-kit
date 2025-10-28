@@ -1,4 +1,4 @@
-# [![AWS CDK Starter Kit header](./icons/github-title-banner.png)](https://towardsthecloud.com)
+# [![AWS CDK Starter Kit header](./images/github-title-banner.png)](https://towardsthecloud.com)
 
 # AWS CDK Starter Kit
 
