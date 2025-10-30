@@ -154,11 +154,13 @@ function createCdkDeploymentWorkflow(
   orderedEnvironments: string[] = [],
 ): github.GithubWorkflow {
   const workflowName = `cdk-deploy-${env}${deployForBranch ? '-branch' : ''}`;
-  const cdkDeploymentWorkflow = new github.GithubWorkflow(
-    gh,
-    workflowName,
-    !deployForBranch ? { limitConcurrency: true } : undefined,
-  );
+  const cdkDeploymentWorkflow = new github.GithubWorkflow(gh, workflowName, {
+    limitConcurrency: true,
+    concurrencyOptions: {
+      group: '${{ github.workflow }}-${{ github.ref_name }}',
+      cancelInProgress: false,
+    },
+  });
 
   const workflowTriggers: Record<string, unknown> = {
     workflowDispatch: {}, // Always allow manual workflow dispatch

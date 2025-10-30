@@ -9,7 +9,7 @@ on:
     types:
       - completed
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: false
 jobs:
   deploy:
