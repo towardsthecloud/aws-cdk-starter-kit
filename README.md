@@ -8,6 +8,18 @@
 
 Production-ready AWS CDK TypeScript starter kit with secure OIDC authentication, automated CI/CD, and branch-based deployments. Deploy infrastructure to AWS in minutes with projen-powered configuration.
 
+## 🚀 Features
+
+- **⚡ Rapid Setup**: Jumpstart your project within minutes by tweaking a [single configuration file (projen)](./.projenrc.ts)
+  - Preconfigured TypeScript with optimized compiler settings in [tsconfig.json](./tsconfig.json)
+  - Pre-configured linting & formatting with [biome.jsonc](./biome.jsonc) for code quality
+  - Clean [project structure](#project-structure) for easy management of constructs and stacks
+- **🛡️ Seamless Security**: OIDC authentication for keyless AWS deployments - no stored credentials or long-lived secrets required
+- **🤖 Automated CI/CD**: Out-of-the-box GitHub Actions workflows with multi-account support for enterprise-ready deployments
+- **💬 Automated CDK Diff on PRs**: [CDK diff outputs](https://github.com/marketplace/actions/aws-cdk-diff-pr-commenter) are automatically posted to your pull requests for easy infrastructure change reviews
+- **💻 Branch-based Deployments**: Deploy multiple CDK stacks to the same AWS environments based on Git branch for an improved multi-developer workflow
+- **📦 Automated Dependency Management**: Dependabot creates grouped PRs with auto-approval for passing checks, streamlining updates while maintaining stability
+
 <!-- TIP-LIST:START -->
 > [!TIP]
 > **Towards the Cloud runs the AWS foundation for modern product teams. This means your team ships faster, slashes AWS spend, and stay audit-ready without having to hire a platform squad.**
@@ -52,18 +64,6 @@ Production-ready AWS CDK TypeScript starter kit with secure OIDC authentication,
 >
 > </details>
 <!-- TIP-LIST:END -->
-
-## 🚀 Features
-
-- **⚡ Rapid Setup**: Jumpstart your project within minutes by tweaking a [single configuration file (projen)](./.projenrc.ts)
-  - Preconfigured TypeScript with optimized compiler settings in [tsconfig.json](./tsconfig.json)
-  - Pre-configured linting & formatting with [biome.jsonc](./biome.jsonc) for code quality
-  - Clean [project structure](#project-structure) for easy management of constructs and stacks
-- **🛡️ Seamless Security**: OIDC authentication for keyless AWS deployments - no stored credentials or long-lived secrets required
-- **🤖 Automated CI/CD**: Out-of-the-box GitHub Actions workflows with multi-account support for enterprise-ready deployments
-- **💬 Automated CDK Diff on PRs**: [CDK diff outputs](https://github.com/marketplace/actions/aws-cdk-diff-pr-commenter) are automatically posted to your pull requests for easy infrastructure change reviews
-- **💻 Branch-based Deployments**: Deploy multiple CDK stacks to the same AWS environments based on Git branch for an improved multi-developer workflow
-- **📦 Automated Dependency Management**: Dependabot creates grouped PRs with auto-approval for passing checks, streamlining updates while maintaining stability
 
 ## Quick Start
 
