@@ -115,6 +115,19 @@ new JsonFile(project, '.vscode/extensions.json', {
   marker: false,
 });
 
+// Add auto-merge step to the auto-approve workflow
+const autoApproveWorkflow = project.tryFindObjectFile('.github/workflows/auto-approve.yml');
+if (autoApproveWorkflow) {
+  autoApproveWorkflow.addOverride('jobs.approve.permissions.contents', 'write');
+  autoApproveWorkflow.addOverride('jobs.approve.steps.1', {
+    name: 'Enable Pull Request Automerge',
+    run: `gh pr merge --merge --auto "\${{ github.event.pull_request.number }}"`,
+    env: {
+      GH_TOKEN: `\${{ secrets.GITHUB_TOKEN }}`,
+    },
+  });
+}
+
 /**
  * Defines the environment configurations for the CDK application.
  * The order of the environments in this array determines the deployment sequence in the pipeline.
