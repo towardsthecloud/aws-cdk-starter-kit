@@ -77,7 +77,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   },
   dependabot: true,
   dependabotOptions: {
-    scheduleInterval: DependabotScheduleInterval.DAILY,
+    scheduleInterval: DependabotScheduleInterval.WEEKLY,
     labels: ['dependencies', 'auto-approve'],
     groups: {
       default: {
@@ -119,12 +119,14 @@ new JsonFile(project, '.vscode/extensions.json', {
 const autoApproveWorkflow = project.tryFindObjectFile('.github/workflows/auto-approve.yml');
 if (autoApproveWorkflow) {
   autoApproveWorkflow.addOverride('jobs.approve.permissions.contents', 'write');
+  // Add checkout step before the merge step
   autoApproveWorkflow.addOverride('jobs.approve.steps.1', {
+    name: 'Checkout',
+    uses: 'actions/checkout@v5',
+  });
+  autoApproveWorkflow.addOverride('jobs.approve.steps.2', {
     name: 'Enable Pull Request Automerge',
     run: `gh pr merge --merge --auto "\${{ github.event.pull_request.number }}"`,
-    env: {
-      GH_TOKEN: `\${{ secrets.GITHUB_TOKEN }}`,
-    },
   });
 }
 
