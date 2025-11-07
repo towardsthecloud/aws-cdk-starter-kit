@@ -77,7 +77,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   },
   dependabot: true,
   dependabotOptions: {
-    scheduleInterval: DependabotScheduleInterval.WEEKLY,
+    scheduleInterval: DependabotScheduleInterval.DAILY,
     labels: ['dependencies', 'auto-approve'],
     groups: {
       default: {
