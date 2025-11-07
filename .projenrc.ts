@@ -73,12 +73,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     },
   },
   autoApproveOptions: {
-    allowedUsernames: ['dependabot', 'dependabot[bot]', 'github-bot', 'github-actions[bot]'],
-    /**
-     * The name of the secret that has the GitHub PAT for auto-approving PRs.
-     * Generate a new PAT (https://github.com/settings/tokens/new) and add it to your repo's secrets
-     */
-    secret: 'PROJEN_GITHUB_TOKEN',
+    allowedUsernames: ['dependabot', 'dependabot[bot]'],
   },
   dependabot: true,
   dependabotOptions: {
@@ -91,23 +86,6 @@ const project = new awscdk.AwsCdkTypeScriptApp({
       },
     },
     ignore: [{ dependencyName: 'aws-cdk-lib' }, { dependencyName: 'aws-cdk' }],
-  },
-  githubOptions: {
-    mergifyOptions: {
-      rules: [
-        {
-          name: 'Automatic merge for Dependabot pull requests',
-          conditions: ['author=dependabot[bot]', 'check-success=build', 'check-success=test'],
-          actions: {
-            queue: {
-              name: 'dependency-updates',
-              method: 'squash',
-              commit_message_template: '{{title}} (#{{number}})',
-            },
-          },
-        },
-      ],
-    },
   },
   gitignore: [
     '.DS_Store',
