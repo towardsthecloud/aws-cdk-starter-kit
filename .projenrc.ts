@@ -127,6 +127,9 @@ if (autoApproveWorkflow) {
   autoApproveWorkflow.addOverride('jobs.approve.steps.2', {
     name: 'Enable Pull Request Automerge',
     run: `gh pr merge --merge --auto "\${{ github.event.pull_request.number }}"`,
+    env: {
+      GH_TOKEN: `\${{ secrets.GITHUB_TOKEN }}`,
+    },
   });
 }
 
