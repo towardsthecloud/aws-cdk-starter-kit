@@ -41,6 +41,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   minNodeVersion: nodeVersion,
   projenrcTs: true,
   release: true,
+  autoMerge: false,
   deps: ['cloudstructs', 'netmask'], // Runtime dependencies of this module
   devDeps: ['@types/netmask'], // Development dependencies of this module
   biome: true,
