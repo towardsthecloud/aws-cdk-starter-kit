@@ -74,6 +74,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   },
   autoApproveOptions: {
     allowedUsernames: ['dependabot', 'dependabot[bot]'],
+    secret: 'PROJEN_GITHUB_TOKEN',
   },
   dependabot: true,
   dependabotOptions: {
@@ -122,9 +123,6 @@ if (autoApproveWorkflow) {
   autoApproveWorkflow.addOverride('jobs.approve.steps.1', {
     name: 'Enable Pull Request Automerge',
     run: `gh pr merge --merge --auto "\${{ github.event.pull_request.number }}"`,
-    env: {
-      GH_TOKEN: `\${{ secrets.GITHUB_TOKEN }}`,
-    },
   });
 }
 
