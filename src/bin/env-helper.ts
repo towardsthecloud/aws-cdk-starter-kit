@@ -166,7 +166,11 @@ export function createEnvResourceName(baseName: string): string {
 
   if (branchName) {
     const cleanedBranchName = extractCleanedBranchName(branchName);
-    resourceName = `${baseName}-${cleanedBranchName}`;
+    if (cleanedBranchName) {
+      resourceName = `${baseName}-${cleanedBranchName}`;
+    } else {
+      resourceName = `${baseName}-${environment}`;
+    }
   } else {
     resourceName = `${baseName}-${environment}`;
   }

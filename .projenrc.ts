@@ -1,7 +1,7 @@
 import { awscdk, JsonFile, TextFile } from 'projen';
 import { DependabotScheduleInterval } from 'projen/lib/github';
 import { NodePackageManager } from 'projen/lib/javascript';
-import { IndentStyle, QuoteStyle, Semicolons, TrailingCommas } from 'projen/lib/javascript/biome/biome-config';
+import { IndentStyle, JsTrailingCommas, QuoteStyle, Semicolons } from 'projen/lib/javascript/biome/biome-config';
 import { createCdkDeploymentWorkflows, createCdkDiffPrWorkflow } from './src/bin/cicd-helper';
 import { addCdkActionTask, type Environment, type EnvironmentConfig } from './src/bin/env-helper';
 
@@ -33,9 +33,9 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   name: 'aws-cdk-starter-kit',
   description: 'Create and deploy an AWS CDK app on your AWS account in less than 5 minutes using GitHub actions!',
   cdkVersionPinning: true,
-  cdkCliVersion: '2.1031.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
-  cdkVersion: '2.221.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
-  projenVersion: '0.98.4', // Find the latest projen version here: https://www.npmjs.com/package/projen
+  cdkCliVersion: '2.1106.1', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
+  cdkVersion: '2.238.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
+  projenVersion: '0.99.12', // Find the latest projen version here: https://www.npmjs.com/package/projen
   defaultReleaseBranch: 'main',
   packageManager: NodePackageManager.NPM,
   minNodeVersion: nodeVersion,
@@ -62,7 +62,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
         formatter: {
           jsxQuoteStyle: QuoteStyle.SINGLE,
           quoteStyle: QuoteStyle.SINGLE,
-          trailingCommas: TrailingCommas.ALL,
+          trailingCommas: JsTrailingCommas.ALL,
           semicolons: Semicolons.ALWAYS,
         },
       },
