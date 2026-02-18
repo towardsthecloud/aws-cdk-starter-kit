@@ -243,14 +243,10 @@ function createCdkDestroyWorkflow(
   const workflowName = `cdk-destroy-${env}-branch`;
   const cdkDestroyWorkflow = new github.GithubWorkflow(gh, workflowName);
 
-  const workflowTriggers: github.workflows.Triggers = {
+  const workflowTriggers = {
     workflowDispatch: {},
     delete: {
       branches: ['**', ...BRANCH_EXCLUSIONS.map((branch) => `!${branch}`)],
-    },
-    pullRequest: {
-      types: ['closed'],
-      branches: ['main'],
     },
   };
 
@@ -281,21 +277,11 @@ function createCdkDestroyWorkflow(
         GIT_BRANCH_REF: '${{ steps.destroy-branch.outputs.DESTROY_BRANCH_NAME }}',
       },
     },
-    {
-      name: 'Destroy Branch Stack (Pull Request Closure)',
-      if: "github.event_name == 'pull_request'",
-      run: `npm run ${getTaskName(env, 'destroy', { isBranch: true, taskType: 'all' })}`,
-      env: {
-        GIT_BRANCH_REF: '${{ github.head_ref }}',
-      },
-    },
   ];
 
   cdkDestroyWorkflow.addJobs({
     destroy: {
       name: 'Remove deployment of feature branch',
-      // Run if: not main branch PR, OR branch deletion event, OR manual dispatch
-      if: "github.head_ref != 'main' || (github.event.ref_type == 'branch' && github.event_name == 'delete') || github.event_name == 'workflow_dispatch'",
       runsOn: COMMON_RUNS_ON,
       environment: env,
       permissions: COMMON_WORKFLOW_PERMISSIONS,

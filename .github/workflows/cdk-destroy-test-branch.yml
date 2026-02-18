@@ -10,11 +10,6 @@ on:
       - "!hotfix/*"
       - "!github-actions/*"
       - "!dependabot/**"
-  pull_request:
-    types:
-      - closed
-    branches:
-      - main
 jobs:
   destroy:
     name: Remove deployment of feature branch
@@ -23,7 +18,6 @@ jobs:
       contents: read
       id-token: write
     environment: test
-    if: github.head_ref != 'main' || (github.event.ref_type == 'branch' && github.event_name == 'delete') || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -52,9 +46,4 @@ jobs:
         if: github.event.ref_type == 'branch' && github.event_name == 'delete'
         env:
           GIT_BRANCH_REF: ${{ steps.destroy-branch.outputs.DESTROY_BRANCH_NAME }}
-        run: npm run test:branch:destroy:all
-      - name: Destroy Branch Stack (Pull Request Closure)
-        if: github.event_name == 'pull_request'
-        env:
-          GIT_BRANCH_REF: ${{ github.head_ref }}
         run: npm run test:branch:destroy:all
