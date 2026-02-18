@@ -160,6 +160,16 @@
         }
       ]
     },
+    "lint": {
+      "name": "lint",
+      "description": "Lint and auto-fix the codebase using Biome",
+      "steps": [
+        {
+          "exec": "biome check --no-errors-on-unmatched --write",
+          "receiveArgs": true
+        }
+      ]
+    },
     "package": {
       "name": "package",
       "description": "Creates the distribution package",

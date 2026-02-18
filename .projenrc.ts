@@ -103,6 +103,13 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   ],
 });
 
+// Add a lint task as an alias for the biome task
+project.addTask('lint', {
+  description: 'Lint and auto-fix the codebase using Biome',
+  exec: 'biome check --no-errors-on-unmatched --write',
+  receiveArgs: true,
+});
+
 // Create .nvmrc file with the Node.js version (useful for autoswitching node environment locally)
 new TextFile(project, '.nvmrc', {
   lines: [`v${nodeVersion}`],
