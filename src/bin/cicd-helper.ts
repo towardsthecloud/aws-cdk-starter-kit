@@ -79,7 +79,7 @@ export function createCdkDiffPrWorkflow(
   ];
 
   cdkDiffWorkflow.addJobs({
-    deploy: {
+    diff: {
       name: `CDK diff PR branch with ${highestEnv} environment (via main)`,
       runsOn: COMMON_RUNS_ON,
       permissions: diffWorkflowPermissions,
@@ -277,21 +277,11 @@ function createCdkDestroyWorkflow(
         GIT_BRANCH_REF: '${{ steps.destroy-branch.outputs.DESTROY_BRANCH_NAME }}',
       },
     },
-    {
-      name: 'Destroy Branch Stack (Pull Request Closure)',
-      if: "github.event_name == 'pull_request'",
-      run: `npm run ${getTaskName(env, 'destroy', { isBranch: true, taskType: 'all' })}`,
-      env: {
-        GIT_BRANCH_REF: '${{ github.head_ref }}',
-      },
-    },
   ];
 
   cdkDestroyWorkflow.addJobs({
     destroy: {
       name: 'Remove deployment of feature branch',
-      // Run if: not main branch PR, OR branch deletion event, OR manual dispatch
-      if: "github.head_ref != 'main' || (github.event.ref_type == 'branch' && github.event_name == 'delete') || github.event_name == 'workflow_dispatch'",
       runsOn: COMMON_RUNS_ON,
       environment: env,
       permissions: COMMON_WORKFLOW_PERMISSIONS,
@@ -384,12 +374,12 @@ function getCommonWorkflowSteps(
  * @param roleName - The name of the AWS role to assume.
  * @returns A workflow step for configuring AWS credentials.
  */
-function getAwsCredentialsStep(account: string | undefined, region: string, roleName: string): github.workflows.Step {
+function getAwsCredentialsStep(account: string, region: string, roleName: string): github.workflows.Step {
   return {
     name: 'Configure AWS credentials',
     uses: 'aws-actions/configure-aws-credentials@v4',
     with: {
-      'role-to-assume': account ? `arn:aws:iam::${account}:role/${roleName}` : undefined,
+      'role-to-assume': `arn:aws:iam::${account}:role/${roleName}`,
       'aws-region': region,
     },
   };

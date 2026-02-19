@@ -6,7 +6,7 @@ on:
     branches:
       - main
 jobs:
-  deploy:
+  diff:
     name: CDK diff PR branch with production environment (via main)
     runs-on: ubuntu-latest
     permissions:
