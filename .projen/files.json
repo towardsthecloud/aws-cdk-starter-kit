@@ -1,9 +1,7 @@
 {
   "files": [
     ".gitattributes",
-    ".github/dependabot.yml",
     ".github/pull_request_template.md",
-    ".github/workflows/auto-approve.yml",
     ".github/workflows/build.yml",
     ".github/workflows/cdk-deploy-production.yml",
     ".github/workflows/cdk-deploy-test-branch.yml",
@@ -12,7 +10,9 @@
     ".github/workflows/cdk-diff-pr-comment.yml",
     ".github/workflows/pull-request-lint.yml",
     ".github/workflows/release.yml",
+    ".github/workflows/upgrade-main.yml",
     ".gitignore",
+    ".mergify.yml",
     ".npmignore",
     ".nvmrc",
     ".projen/deps.json",

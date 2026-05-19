@@ -23,14 +23,14 @@ jobs:
     environment: test
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Setup nodejs environment
         uses: actions/setup-node@v6
         with:
           node-version: ">=22.18.0"
           cache: npm
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::987654321012:role/GitHubActionsServiceRole
           aws-region: us-east-1

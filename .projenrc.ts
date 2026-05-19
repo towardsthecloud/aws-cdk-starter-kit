@@ -1,5 +1,4 @@
 import { awscdk, JsonFile, TextFile } from 'projen';
-import { DependabotScheduleInterval } from 'projen/lib/github';
 import { NodePackageManager } from 'projen/lib/javascript';
 import { IndentStyle, JsTrailingCommas, QuoteStyle, Semicolons } from 'projen/lib/javascript/biome/biome-config';
 import { createCdkDeploymentWorkflows, createCdkDiffPrWorkflow } from './src/bin/cicd-helper';
@@ -41,7 +40,6 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   minNodeVersion: nodeVersion,
   projenrcTs: true,
   release: true,
-  autoMerge: false,
   deps: ['cloudstructs', 'netmask'], // Runtime dependencies of this module
   devDeps: ['@types/netmask'], // Development dependencies of this module
   biome: true,
@@ -72,21 +70,6 @@ const project = new awscdk.AwsCdkTypeScriptApp({
         },
       },
     },
-  },
-  autoApproveOptions: {
-    allowedUsernames: ['dependabot', 'dependabot[bot]'],
-  },
-  dependabot: true,
-  dependabotOptions: {
-    scheduleInterval: DependabotScheduleInterval.WEEKLY,
-    labels: ['dependencies', 'auto-approve'],
-    groups: {
-      default: {
-        patterns: ['*'],
-        excludePatterns: ['aws-cdk*', 'projen'],
-      },
-    },
-    ignore: [{ dependencyName: 'aws-cdk-lib' }, { dependencyName: 'aws-cdk' }],
   },
   gitignore: [
     '.DS_Store',
@@ -122,24 +105,6 @@ new JsonFile(project, '.vscode/extensions.json', {
   },
   marker: false,
 });
-
-// Add auto-merge step to the auto-approve workflow
-const autoApproveWorkflow = project.tryFindObjectFile('.github/workflows/auto-approve.yml');
-if (autoApproveWorkflow) {
-  autoApproveWorkflow.addOverride('jobs.approve.permissions.contents', 'write');
-  // Add checkout step before the merge step
-  autoApproveWorkflow.addOverride('jobs.approve.steps.1', {
-    name: 'Checkout',
-    uses: 'actions/checkout@v5',
-  });
-  autoApproveWorkflow.addOverride('jobs.approve.steps.2', {
-    name: 'Enable Pull Request Automerge',
-    run: `gh pr merge --merge --auto "\${{ github.event.pull_request.number }}"`,
-    env: {
-      GH_TOKEN: `\${{ secrets.PROJEN_GITHUB_TOKEN }}`,
-    },
-  });
-}
 
 /**
  * Defines the environment configurations for the CDK application.

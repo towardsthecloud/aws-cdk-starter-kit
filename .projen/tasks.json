@@ -191,6 +191,10 @@
         }
       ]
     },
+    "post-upgrade": {
+      "name": "post-upgrade",
+      "description": "Runs after upgrading dependencies"
+    },
     "pre-compile": {
       "name": "pre-compile",
       "description": "Prepare the project for compilation"
@@ -683,6 +687,30 @@
       "steps": [
         {
           "builtin": "release/reset-version"
+        }
+      ]
+    },
+    "upgrade": {
+      "name": "upgrade",
+      "description": "upgrade dependencies",
+      "env": {
+        "CI": "0"
+      },
+      "steps": [
+        {
+          "exec": "npx npm-check-updates@18 --upgrade --target=minor --peer --no-deprecated --dep=dev,peer,prod,optional --filter=@types/jest,@types/netmask,esbuild,jest,ts-jest,ts-node,typescript,cloudstructs,netmask"
+        },
+        {
+          "exec": "npm install"
+        },
+        {
+          "exec": "npm update @biomejs/biome @types/jest @types/netmask @types/node aws-cdk commit-and-tag-version esbuild jest jest-junit projen ts-jest ts-node typescript aws-cdk-lib cloudstructs constructs netmask"
+        },
+        {
+          "exec": "npx projen"
+        },
+        {
+          "spawn": "post-upgrade"
         }
       ]
     },

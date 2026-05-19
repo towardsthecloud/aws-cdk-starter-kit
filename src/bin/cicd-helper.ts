@@ -300,7 +300,7 @@ function createCdkDestroyWorkflow(
 function getCheckoutStep(ref?: string): github.workflows.Step {
   const step: github.workflows.Step = {
     name: 'Checkout repository',
-    uses: 'actions/checkout@v5',
+    uses: 'actions/checkout@v6',
   };
 
   if (ref) {
@@ -377,7 +377,7 @@ function getCommonWorkflowSteps(
 function getAwsCredentialsStep(account: string, region: string, roleName: string): github.workflows.Step {
   return {
     name: 'Configure AWS credentials',
-    uses: 'aws-actions/configure-aws-credentials@v4',
+    uses: 'aws-actions/configure-aws-credentials@v6',
     with: {
       'role-to-assume': `arn:aws:iam::${account}:role/${roleName}`,
       'aws-region': region,
