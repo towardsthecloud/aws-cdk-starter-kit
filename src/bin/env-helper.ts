@@ -53,7 +53,7 @@ export function getTaskName(
 }
 
 /**
- * Adds customized 'npm run' commands for executing AWS CDK actions (synth, diff, deploy, deploy:hotswap, destroy, ls)
+ * Adds customized 'pnpm run' commands for executing AWS CDK actions (synth, diff, deploy, deploy:hotswap, destroy, ls)
  * for a specific environment and branch (if applicable).
  *
  * Creates different task variants:

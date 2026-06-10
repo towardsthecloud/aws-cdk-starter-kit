@@ -65,7 +65,7 @@ export function createCdkDiffPrWorkflow(
   const diffSteps: github.workflows.Step[] = [
     {
       name: 'CDK diff and notify PR',
-      run: `npm run ${getTaskName(highestEnv, 'diff', { taskType: 'all' })} > cdk-diff-output.txt 2>&1 || true`,
+      run: `pnpm run ${getTaskName(highestEnv, 'diff', { taskType: 'all' })} > cdk-diff-output.txt 2>&1 || true`,
     },
     {
       name: 'Post CDK Diff Comment in PR',
@@ -190,11 +190,11 @@ function createCdkDeploymentWorkflow(
   const deploymentSteps: github.workflows.Step[] = [
     {
       name: `Run CDK synth for the ${env.toUpperCase()} environment`,
-      run: `npm run ${getTaskName(env, 'synth', { isBranch: deployForBranch })}`,
+      run: `pnpm run ${getTaskName(env, 'synth', { isBranch: deployForBranch })}`,
     },
     {
       name: `Deploy CDK to the ${env.toUpperCase()} environment on AWS account ${account}`,
-      run: `npm run ${getTaskName(env, 'deploy', { isBranch: deployForBranch, taskType: 'all' })}`,
+      run: `pnpm run ${getTaskName(env, 'deploy', { isBranch: deployForBranch, taskType: 'all' })}`,
     },
   ];
 
@@ -264,7 +264,7 @@ function createCdkDestroyWorkflow(
     {
       name: 'Destroy Branch Stack (Workflow Dispatch)',
       if: "github.event_name == 'workflow_dispatch'",
-      run: `npm run ${getTaskName(env, 'destroy', { isBranch: true, taskType: 'all' })}`,
+      run: `pnpm run ${getTaskName(env, 'destroy', { isBranch: true, taskType: 'all' })}`,
       env: {
         GIT_BRANCH_REF: '${{ github.ref_name }}',
       },
@@ -272,7 +272,7 @@ function createCdkDestroyWorkflow(
     {
       name: 'Destroy Branch Stack (Branch Deletion)',
       if: "github.event.ref_type == 'branch' && github.event_name == 'delete'",
-      run: `npm run ${getTaskName(env, 'destroy', { isBranch: true, taskType: 'all' })}`,
+      run: `pnpm run ${getTaskName(env, 'destroy', { isBranch: true, taskType: 'all' })}`,
       env: {
         GIT_BRANCH_REF: '${{ steps.destroy-branch.outputs.DESTROY_BRANCH_NAME }}',
       },
@@ -314,6 +314,18 @@ function getCheckoutStep(ref?: string): github.workflows.Step {
 }
 
 /**
+ * Creates a pnpm setup step. The pnpm version is resolved from the
+ * `packageManager` field in package.json.
+ * @returns A workflow step for setting up pnpm.
+ */
+function getSetupPnpmStep(): github.workflows.Step {
+  return {
+    name: 'Setup pnpm',
+    uses: 'pnpm/action-setup@v6',
+  };
+}
+
+/**
  * Creates a Node.js setup step.
  * @param nodeVersion - The version of Node.js to be used.
  * @returns A workflow step for setting up Node.js.
@@ -324,19 +336,19 @@ function getSetupNodeStep(nodeVersion: string): github.workflows.Step {
     uses: 'actions/setup-node@v6',
     with: {
       'node-version': nodeVersion ? `>=${nodeVersion}` : 'latest',
-      cache: 'npm',
+      cache: 'pnpm',
     },
   };
 }
 
 /**
  * Creates an install dependencies step.
- * @returns A workflow step for installing npm dependencies.
+ * @returns A workflow step for installing pnpm dependencies.
  */
 function getInstallDepsStep(): github.workflows.Step {
   return {
     name: 'Install dependencies',
-    run: 'npm ci',
+    run: 'pnpm install --frozen-lockfile',
   };
 }
 
@@ -356,7 +368,11 @@ function getCommonWorkflowSteps(
   githubDeployRole?: string,
   checkoutRef?: string,
 ): github.workflows.Step[] {
-  const steps: github.workflows.Step[] = [getCheckoutStep(checkoutRef), getSetupNodeStep(nodeVersion)];
+  const steps: github.workflows.Step[] = [
+    getCheckoutStep(checkoutRef),
+    getSetupPnpmStep(),
+    getSetupNodeStep(nodeVersion),
+  ];
 
   if (githubDeployRole && region && account) {
     steps.push(getAwsCredentialsStep(account, region, githubDeployRole));

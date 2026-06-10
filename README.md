@@ -1,6 +1,6 @@
 # [![AWS CDK Starter Kit header](./images/github-title-banner.png)](https://towardsthecloud.com)
 
-# AWS CDK Starter Kit
+## AWS CDK Starter Kit
 
 [![Build Status](https://github.com/towardsthecloud/aws-cdk-starter-kit/actions/workflows/build.yml/badge.svg)](https://github.com/towardsthecloud/aws-cdk-starter-kit/actions/workflows/build.yml)
 [![Biome Code Formatting](https://img.shields.io/badge/code_style-biome-brightgreen.svg)](https://biomejs.dev)
@@ -8,7 +8,7 @@
 
 Production-ready AWS CDK TypeScript starter kit with secure OIDC authentication, automated CI/CD, and branch-based deployments. Deploy infrastructure to AWS in minutes with projen-powered configuration.
 
-## 🚀 Features
+### 🚀 Features
 
 - **⚡ Rapid Setup**: Jumpstart your project within minutes by tweaking a [single configuration file (projen)](./.projenrc.ts)
   - Preconfigured TypeScript with optimized compiler settings in [tsconfig.json](./tsconfig.json)
@@ -38,6 +38,7 @@ Production-ready AWS CDK TypeScript starter kit with secure OIDC authentication,
 > **What happens now:**
 >
 > Whenever you open a PR with infrastructure changes, the GitHub Action comments with your CDK diff analysis. CloudBurn reads that diff and automatically adds a separate comment with a detailed cost report showing:
+>
 > - **Monthly cost impact** – Will this change increase or decrease your AWS bill? By how much?
 > - **Per-resource breakdown** – See exactly which resources are driving costs (old vs. new monthly costs)
 > - **Region-aware pricing** – We pick the right AWS pricing based on the region where your infrastructure is deployed
@@ -49,7 +50,7 @@ Production-ready AWS CDK TypeScript starter kit with secure OIDC authentication,
 > </details>
 <!-- TIP-LIST:END -->
 
-## Quick Start
+### Quick Start
 
 This project requires at least **Node.js version 22**.
 
@@ -57,7 +58,7 @@ This project requires at least **Node.js version 22**.
 
 1. Click the green ["Use this template"](https://github.com/new?template_name=aws-cdk-starter-kit&template_owner=towardsthecloud) button to create a new repository based on this starter kit.
 
-2. Install the project dependencies using: `npm ci`
+2. Install the project dependencies using: `pnpm install --frozen-lockfile`
 
 3. Customize the AWS Region and Account IDs in the [.projenrc.ts](./.projenrc.ts) file to match your AWS setup.
 
@@ -75,14 +76,15 @@ This project requires at least **Node.js version 22**.
 
 Congratulations! You've successfully set up your project.
 
-## 📚 Full Documentation
+### 📚 Full Documentation
 
 For detailed setup instructions, architecture explanations, and advanced usage guides, visit the **[→ official documentation](https://towardsthecloud.com/docs/aws-cdk-starter-kit)**.
-## Acknowledgements
+
+### Acknowledgements
 
 A heartfelt thank you to the creators of [projen](https://github.com/projen/projen). This starter kit stands on the shoulders of giants, made possible by their pioneering work in simplifying cloud infrastructure projects!
 
-## Author
+### Author
 
 [Danny Steenman](https://towardsthecloud.com/about)
 

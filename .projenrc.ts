@@ -1,11 +1,11 @@
-import { awscdk, JsonFile, TextFile } from 'projen';
+import { awscdk, JsonFile, TextFile, YamlFile } from 'projen';
 import { NodePackageManager } from 'projen/lib/javascript';
 import { IndentStyle, JsTrailingCommas, QuoteStyle, Semicolons } from 'projen/lib/javascript/biome/biome-config';
 import { createCdkDeploymentWorkflows, createCdkDiffPrWorkflow } from './src/bin/cicd-helper';
 import { addCdkActionTask, type Environment, type EnvironmentConfig } from './src/bin/env-helper';
 
 // Set the minimum node version for AWS CDK and the GitHub actions workflow
-const nodeVersion = '22.18.0';
+const nodeVersion = '22.22.0';
 
 /**
  * Define the AWS region for the CDK app and github workflows
@@ -32,11 +32,13 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   name: 'aws-cdk-starter-kit',
   description: 'Create and deploy an AWS CDK app on your AWS account in less than 5 minutes using GitHub actions!',
   cdkVersionPinning: true,
-  cdkCliVersion: '2.1122.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
-  cdkVersion: '2.254.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
-  projenVersion: '0.99.62', // Find the latest projen version here: https://www.npmjs.com/package/projen
+  cdkCliVersion: '2.1126.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
+  cdkVersion: '2.258.1', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
+  projenVersion: '0.99.71', // Find the latest projen version here: https://www.npmjs.com/package/projen
   defaultReleaseBranch: 'main',
-  packageManager: NodePackageManager.NPM,
+  mergify: false,
+  packageManager: NodePackageManager.PNPM,
+  pnpmVersion: '11.5.3', // Find the latest pnpm version here: https://www.npmjs.com/package/pnpm
   minNodeVersion: nodeVersion,
   projenrcTs: true,
   release: true,
@@ -86,6 +88,20 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   ],
 });
 
+/**
+ * pnpm settings live in pnpm-workspace.yaml (pnpm v11+ no longer reads the "pnpm" field in package.json)
+ * - minimumReleaseAge: 0 disables the supply-chain release-age policy so freshly published deps can be installed
+ * - allowBuilds: allows esbuild to run its postinstall script (pnpm blocks build scripts by default)
+ */
+new YamlFile(project, 'pnpm-workspace.yaml', {
+  obj: {
+    minimumReleaseAge: 0,
+    allowBuilds: {
+      esbuild: true,
+    },
+  },
+});
+
 // Add a lint task as an alias for the biome task
 project.addTask('lint', {
   description: 'Lint and auto-fix the codebase using Biome',
@@ -124,10 +140,10 @@ const environmentConfigs: (EnvironmentConfig & { name: Environment })[] = [
 ];
 
 /**
- * Add npm run commands that you can use to deploy to each environment
+ * Add pnpm run commands that you can use to deploy to each environment
  * The environment variables are passed to the CDK CLI to deploy to the correct account and region
  * The `cdkDeploymentTask` function is defined in the `src/bin/helper.ts` file
- * You can now run a command like: `npm run dev:synth` to synthesize your aws cdk dev stacks
+ * You can now run a command like: `pnpm run dev:synth` to synthesize your aws cdk dev stacks
  */
 if (project.github) {
   const orderedEnvironments = environmentConfigs.map((env) => env.name);
