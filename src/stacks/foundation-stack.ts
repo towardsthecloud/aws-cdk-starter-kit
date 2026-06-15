@@ -1,8 +1,31 @@
 import * as cdk from 'aws-cdk-lib';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import { ToolkitCleaner } from 'cloudstructs/lib/toolkit-cleaner';
 import type { Construct } from 'constructs';
-import { getGitRepositoryDetails } from '../bin/git-helper';
+import { GitHubActionsOidcConstruct } from '../constructs';
+
+/**
+ * Optional GitHub Actions OIDC deployment role settings for `FoundationStack`.
+ */
+export interface FoundationStackGitHubActionsOidcProps {
+  /**
+   * Additional repository names, under the same GitHub owner, allowed to assume the deployment role.
+   *
+   * @default - only the repository resolved from the current git remote is trusted
+   */
+  readonly additionalRepositories?: string[];
+  /**
+   * Maximum session duration for the GitHub Actions deployment role.
+   *
+   * @default cdk.Duration.hours(2)
+   */
+  readonly maxSessionDuration?: cdk.Duration;
+  /**
+   * Name of the IAM role assumed by GitHub Actions workflows.
+   *
+   * @default process.env.GITHUB_DEPLOY_ROLE ?? 'GitHubActionsServiceRole'
+   */
+  readonly roleName?: string;
+}
 
 export interface FoundationStackProps extends cdk.StackProps {
   /**
@@ -11,6 +34,15 @@ export interface FoundationStackProps extends cdk.StackProps {
    * @default - If not given, it will throw out an error
    */
   readonly environment: string;
+  /**
+   * Optional GitHub Actions OIDC deployment role settings.
+   *
+   * The stack always scopes the role trust policy to `environment`, so this accepts every
+   * construct prop except `environment`.
+   *
+   * @default - use the construct defaults
+   */
+  readonly githubActionsOidc?: FoundationStackGitHubActionsOidcProps;
 }
 
 /**
@@ -38,30 +70,9 @@ export class FoundationStack extends cdk.Stack {
     ////////////////////////////////
     // Setup GitHub OIDC support //
     //////////////////////////////
-    const { gitOwner, gitRepoName } = getGitRepositoryDetails();
-
-    const githubDomain = 'token.actions.githubusercontent.com';
-
-    const openIdConnectProvider = new iam.OpenIdConnectProvider(this, 'GithubProvider', {
-      url: `https://${githubDomain}`,
-      clientIds: ['sts.amazonaws.com'],
-    });
-
-    const conditions: iam.Conditions = {
-      StringLike: {
-        [`${githubDomain}:sub`]: `repo:${gitOwner}/${gitRepoName}:environment:${props.environment}`,
-      },
-      StringEquals: {
-        [`${githubDomain}:aud`]: 'sts.amazonaws.com',
-      },
-    };
-
-    new iam.Role(this, 'GitHubActionsServiceRole', {
-      assumedBy: new iam.WebIdentityPrincipal(openIdConnectProvider.openIdConnectProviderArn, conditions),
-      description: 'This role is used via GitHub Actions to deploy with AWS CDK or Terraform on the target AWS account',
-      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
-      maxSessionDuration: cdk.Duration.hours(2),
-      roleName: process.env.GITHUB_DEPLOY_ROLE ?? 'GitHubActionsServiceRole',
+    new GitHubActionsOidcConstruct(this, 'GitHubActionsOidc', {
+      ...props.githubActionsOidc,
+      environment: props.environment,
     });
 
     ////////////////////////////////
