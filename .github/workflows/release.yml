@@ -38,11 +38,11 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v5
         with:
-          version: 11.5.3
+          version: 11.9.0
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22.22.0
+          node-version: 24.18.0
           package-manager-cache: false
       - name: Install dependencies
         run: pnpm i --frozen-lockfile
@@ -82,7 +82,7 @@ jobs:
     steps:
       - uses: actions/setup-node@v6
         with:
-          node-version: 22.22.0
+          node-version: 24.18.0
           package-manager-cache: false
       - name: Download build artifacts
         uses: actions/download-artifact@v8

@@ -5,7 +5,7 @@ import { createCdkDeploymentWorkflows, createCdkDiffPrWorkflow } from './src/bin
 import { addCdkActionTask, type Environment, type EnvironmentConfig } from './src/bin/env-helper';
 
 // Set the minimum node version for AWS CDK and the GitHub actions workflow
-const nodeVersion = '22.22.0';
+const nodeVersion = '24.18.0';
 
 /**
  * Define the AWS region for the CDK app and github workflows
@@ -32,22 +32,24 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   name: 'aws-cdk-starter-kit',
   description: 'Create and deploy an AWS CDK app on your AWS account in less than 5 minutes using GitHub actions!',
   cdkVersionPinning: true,
-  cdkCliVersion: '2.1126.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
-  cdkVersion: '2.258.1', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
-  projenVersion: '0.99.71', // Find the latest projen version here: https://www.npmjs.com/package/projen
+  cdkCliVersion: '2.1128.1', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
+  cdkVersion: '2.260.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
+  projenVersion: '0.100.7', // Find the latest projen version here: https://www.npmjs.com/package/projen
   defaultReleaseBranch: 'main',
-  mergify: false,
   packageManager: NodePackageManager.PNPM,
-  pnpmVersion: '11.5.3', // Find the latest pnpm version here: https://www.npmjs.com/package/pnpm
+  pnpmVersion: '11.9.0', // Find the latest pnpm version here: https://www.npmjs.com/package/pnpm
   minNodeVersion: nodeVersion,
   projenrcTs: true,
   release: true,
   deps: ['cloudstructs', 'netmask'], // Runtime dependencies of this module
   devDeps: ['@types/netmask'], // Development dependencies of this module
-  biome: true,
   context: {
     'cli-telemetry': false, // Disable AWS CDK CLI telemetry, see: https://github.com/aws/aws-cdk/issues/34892
   },
+  githubOptions: {
+    mergify: false,
+  },
+  biome: true,
   biomeOptions: {
     biomeConfig: {
       formatter: {

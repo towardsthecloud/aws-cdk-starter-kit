@@ -53,10 +53,11 @@ junit.xml
 !/biome.jsonc
 !/test/
 !/tsconfig.json
-!/tsconfig.dev.json
+!/test/tsconfig.json
 !/src/
 /lib
 /dist/
+!/projenrc/tsconfig.json
 /assets/
 !/cdk.json
 /cdk.out/

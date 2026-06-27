@@ -31,7 +31,8 @@
       "!.projen/tasks.json",
       "!cdk.json",
       "!pnpm-workspace.yaml",
-      "!tsconfig.dev.json",
+      "!projenrc/tsconfig.json",
+      "!test/tsconfig.json",
       "!tsconfig.json"
     ]
   },
