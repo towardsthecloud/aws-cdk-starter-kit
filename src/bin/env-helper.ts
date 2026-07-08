@@ -67,10 +67,13 @@ export function getTaskName(
  * including the AWS account ID, environment name, and optional GIT_BRANCH_REF.
  */
 export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetAccount: { [name: string]: string }) {
+  const isBranch = !!targetAccount.GIT_BRANCH_REF;
+  const useExpressMode = targetAccount.ENVIRONMENT === 'test' && isBranch;
+  const expressModeArg = useExpressMode ? ' --express' : '';
   const commandMap = {
     synth: 'cdk synth',
-    destroy: 'cdk destroy --force',
-    deploy: 'cdk deploy --require-approval never',
+    destroy: `cdk destroy${expressModeArg} --force`,
+    deploy: `cdk deploy${expressModeArg} --require-approval never`,
     'deploy:hotswap': 'cdk deploy --hotswap --require-approval never',
     diff: 'cdk diff',
     ls: 'cdk ls',
@@ -79,8 +82,6 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
   const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
   const createDescription = (action: string, target: string) =>
     `${capitalize(action)} ${target} on the ${targetAccount.ENVIRONMENT.toUpperCase()} account`;
-
-  const isBranch = !!targetAccount.GIT_BRANCH_REF;
 
   for (const action of SUPPORTED_CDK_ACTIONS) {
     // Skip hotswap action if not a branch deployment

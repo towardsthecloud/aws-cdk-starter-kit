@@ -418,7 +418,7 @@
       },
       "steps": [
         {
-          "exec": "cdk deploy --require-approval never --all"
+          "exec": "cdk deploy --express --require-approval never --all"
         }
       ]
     },
@@ -467,7 +467,7 @@
       },
       "steps": [
         {
-          "exec": "cdk deploy --require-approval never",
+          "exec": "cdk deploy --express --require-approval never",
           "receiveArgs": true
         }
       ]
@@ -484,7 +484,7 @@
       },
       "steps": [
         {
-          "exec": "cdk destroy --force --all"
+          "exec": "cdk destroy --express --force --all"
         }
       ]
     },
@@ -500,7 +500,7 @@
       },
       "steps": [
         {
-          "exec": "cdk destroy --force",
+          "exec": "cdk destroy --express --force",
           "receiveArgs": true
         }
       ]
