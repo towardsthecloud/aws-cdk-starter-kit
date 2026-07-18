@@ -68,5 +68,5 @@
       "allowComments": true
     }
   },
-  "$schema": "node_modules/.pnpm/@biomejs+biome@2.5.1/node_modules/@biomejs/biome/configuration_schema.json"
+  "$schema": "node_modules/.pnpm/@biomejs+biome@2.5.4/node_modules/@biomejs/biome/configuration_schema.json"
 }
