@@ -32,7 +32,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   name: 'aws-cdk-starter-kit',
   description: 'Create and deploy an AWS CDK app on your AWS account in less than 5 minutes using GitHub actions!',
   cdkVersionPinning: true,
-  cdkCliVersion: '2.1131.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
+  cdkCliVersion: '2.1130.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
   cdkVersion: '2.261.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
   projenVersion: '0.101.11', // Find the latest projen version here: https://www.npmjs.com/package/projen
   defaultReleaseBranch: 'main',
@@ -40,7 +40,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   pnpmVersion: '11.15.1', // Find the latest pnpm version here: https://www.npmjs.com/package/pnpm
   pnpmOptions: {
     workspaceYamlOptions: {
-      minimumReleaseAge: 7,
+      minimumReleaseAge: 7 * 24 * 60, // 7 days in minutes
       allowBuilds: {
         esbuild: true,
       },
