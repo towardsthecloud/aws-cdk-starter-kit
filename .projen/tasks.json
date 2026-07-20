@@ -1,5 +1,5 @@
 {
-  "manifestVersion": 2,
+  "manifestVersion": 3,
   "env": {
     "PATH": "$(pnpm -c exec \"node --print process.env.PATH\")"
   },
@@ -101,7 +101,12 @@
       "description": "Synthesize project files",
       "steps": [
         {
-          "exec": "ts-node --project test/tsconfig.json .projenrc.ts"
+          "execArgs": [
+            "ts-node",
+            "--project",
+            "projenrc/tsconfig.json",
+            ".projenrc.ts"
+          ]
         }
       ]
     },
@@ -727,13 +732,43 @@
       },
       "steps": [
         {
-          "exec": "pnpm dlx npm-check-updates@20 --upgrade --target=minor --peer --no-deprecated --dep=dev,peer,prod,optional --filter=@types/jest,@types/netmask,esbuild,jest,ts-jest,ts-node,typescript,cloudstructs,netmask"
+          "execArgs": [
+            "pnpm",
+            "dlx",
+            "npm-check-updates@20",
+            "--upgrade",
+            "--target=minor",
+            "--peer",
+            "--no-deprecated",
+            "--dep=dev,prod,peer,optional",
+            "--filter=@types/jest,@types/netmask,esbuild,jest,ts-jest,ts-node,typescript,cloudstructs,netmask"
+          ]
         },
         {
           "exec": "pnpm i --no-frozen-lockfile"
         },
         {
-          "exec": "pnpm update @biomejs/biome @types/jest @types/netmask @types/node aws-cdk commit-and-tag-version esbuild jest jest-junit projen ts-jest ts-node typescript aws-cdk-lib cloudstructs constructs netmask"
+          "execArgs": [
+            "pnpm",
+            "update",
+            "@biomejs/biome",
+            "@types/jest",
+            "@types/netmask",
+            "@types/node",
+            "aws-cdk",
+            "commit-and-tag-version",
+            "esbuild",
+            "jest",
+            "jest-junit",
+            "projen",
+            "ts-jest",
+            "ts-node",
+            "typescript",
+            "aws-cdk-lib",
+            "cloudstructs",
+            "constructs",
+            "netmask"
+          ]
         },
         {
           "exec": "pnpm exec projen"

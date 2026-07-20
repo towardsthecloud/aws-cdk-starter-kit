@@ -4,6 +4,7 @@
 !/.projen/deps.json
 !/.projen/files.json
 !/.github/workflows/pull-request-lint.yml
+!/pnpm-workspace.yaml
 !/package.json
 !/LICENSE
 !/.npmignore
@@ -63,7 +64,6 @@ junit.xml
 /cdk.out/
 .cdk.staging/
 .parcel-cache/
-!/pnpm-workspace.yaml
 !/.nvmrc
 !/.vscode/extensions.json
 !/.github/workflows/cdk-deploy-test.yml

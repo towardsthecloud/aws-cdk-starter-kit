@@ -20,7 +20,6 @@
     ".vscode/extensions.json",
     "cdk.json",
     "LICENSE",
-    "pnpm-workspace.yaml",
     "projenrc/tsconfig.json",
     "test/tsconfig.json",
     "tsconfig.json"

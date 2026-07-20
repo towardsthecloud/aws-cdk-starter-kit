@@ -32,12 +32,21 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   name: 'aws-cdk-starter-kit',
   description: 'Create and deploy an AWS CDK app on your AWS account in less than 5 minutes using GitHub actions!',
   cdkVersionPinning: true,
-  cdkCliVersion: '2.1129.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
-  cdkVersion: '2.260.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
-  projenVersion: '0.100.7', // Find the latest projen version here: https://www.npmjs.com/package/projen
+  cdkCliVersion: '2.1131.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
+  cdkVersion: '2.261.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
+  projenVersion: '0.101.11', // Find the latest projen version here: https://www.npmjs.com/package/projen
   defaultReleaseBranch: 'main',
   packageManager: NodePackageManager.PNPM,
-  pnpmVersion: '11.9.0', // Find the latest pnpm version here: https://www.npmjs.com/package/pnpm
+  pnpmVersion: '11.15.1', // Find the latest pnpm version here: https://www.npmjs.com/package/pnpm
+  pnpmOptions: {
+    workspaceYamlOptions: {
+      minimumReleaseAge: 7,
+      allowBuilds: {
+        esbuild: true,
+      },
+      verifyDepsBeforeRun: false,
+    },
+  },
   minNodeVersion: nodeVersion,
   projenrcTs: true,
   release: true,
@@ -88,20 +97,6 @@ const project = new awscdk.AwsCdkTypeScriptApp({
     'coverage/',
     'dist/',
   ],
-});
-
-/**
- * pnpm settings live in pnpm-workspace.yaml (pnpm v11+ no longer reads the "pnpm" field in package.json)
- * - minimumReleaseAge: 0 disables the supply-chain release-age policy so freshly published deps can be installed
- * - allowBuilds: allows esbuild to run its postinstall script (pnpm blocks build scripts by default)
- */
-new YamlFile(project, 'pnpm-workspace.yaml', {
-  obj: {
-    minimumReleaseAge: 0,
-    allowBuilds: {
-      esbuild: true,
-    },
-  },
 });
 
 // Add a lint task as an alias for the biome task
