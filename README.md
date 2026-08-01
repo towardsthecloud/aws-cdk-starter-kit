@@ -22,30 +22,41 @@ Production-ready AWS CDK TypeScript starter kit with secure OIDC authentication,
 
 <!-- TIP-LIST:START -->
 > [!TIP]
-> **Stop AWS bill surprises from happening.**
+> **We eliminate AWS complexity so you ship faster, spend less, and stay compliant.**
 >
-> Most infrastructure changes look harmless until you see next month's AWS bill. [CloudBurn](https://cloudburn.io) prevents this by analyzing the cost impact of your AWS CDK changes directly in GitHub pull requests, catching expensive mistakes during code review when fixes are quick, not weeks later when they're costly and risky.
+> Our managed AWS service gives you three things: a production-grade AWS CDK Landing Zone with built-in compliance controls, proactive monitoring that stops cost waste and security drift, and senior AWS expertise that speeds up your team's delivery.
 >
-> <a href="https://github.com/marketplace/cloudburn-io"><img alt="Install CloudBurn from GitHub Marketplace" src="https://img.shields.io/badge/Install%20CloudBurn-GitHub%20Marketplace-brightgreen.svg?style=for-the-badge&logo=github"/></a>
+> Book a free demo to see where you stand and what we'd fix first:
+>
+> <a href="https://towardsthecloud.com/services/aws-cdk-landing-zone#cta"><img alt="Book a Free Demo" src="https://img.shields.io/badge/Book%20a%20Free%20Demo-success.svg?style=for-the-badge"/></a>
 >
 > <details>
-> <summary>💰 <strong>Set it up once, then never be surprised by AWS costs again</strong></summary>
+> <summary>⚡ <strong>See the symptoms of a missing AWS foundation and how we solve them</strong></summary>
 > <br/>
 >
-> 1. **First install the free [CDK Diff PR Commenter GitHub Action](https://github.com/marketplace/actions/aws-cdk-diff-pr-commenter)** in your repository where you build your AWS CDK infrastructure
-> 2. **Then install the [CloudBurn GitHub App](https://github.com/marketplace/cloudburn-io)** on the same repository
+> AWS starts simple. Then you scale: production and staging blur together, resources multiply without owners, IAM policies accumulate exceptions, security findings pile up in backlogs, and the bill climbs month after month.
 >
-> **What happens now:**
+> Those are symptoms of a missing AWS foundation. Without one, your developers spend more time fixing problems than shipping features.
 >
-> Whenever you open a PR with infrastructure changes, the GitHub Action comments with your CDK diff analysis. CloudBurn reads that diff and automatically adds a separate comment with a detailed cost report showing:
+> **We provide that foundation and own it entirely, so your team focuses on shipping, not firefighting.**
 >
-> - **Monthly cost impact** – Will this change increase or decrease your AWS bill? By how much?
-> - **Per-resource breakdown** – See exactly which resources are driving costs (old vs. new monthly costs)
-> - **Region-aware pricing** – We pick the right AWS pricing based on the region where your infrastructure is deployed
+> ### Here's what's included:
 >
-> Your team can now validate cost impact alongside infrastructure changes during code review. Essentially, this shifts FinOps left where you optimize costs as you code, not weeks later when context is lost and production adjustments require more time and carry added risk.
+> **1. We Provision a Secure [AWS CDK Landing Zone](https://towardsthecloud.com/services/aws-cdk-landing-zone) That Accelerates Compliance**
+> - Multi-account architecture with security controls and compliance guardrails from day one
+> - Scores 100% on the [CIS AWS Foundations Benchmark](https://docs.aws.amazon.com/securityhub/latest/userguide/cis-aws-foundations-benchmark.html) and 96% on [AWS Foundational Security Best Practices](https://docs.aws.amazon.com/securityhub/latest/userguide/fsbp-standard.html)
+> - Those benchmarks map straight to **SOC 2**, **HIPAA**, and **PCI-DSS** controls, cutting months from your compliance timeline
 >
-> CloudBurn will be free during beta. After launch, a free Community plan (1 repository with unlimited users) will always be available.
+> **2. We Monitor Proactively to Stop Cost Waste and Security Drift**
+> - Quarterly cost reviews catch unattached volumes, oversized instances, and orphaned resources before they compound. AWS spend drops 20-30% on average, with [outliers hitting 60+%](https://towardsthecloud.com/services/aws-cost-optimization#case-study)
+> - Continuous security monitoring across all accounts catches misconfigurations immediately. You get alerts while issues are still fixable, not after they're breaches
+>
+> **3. We Provide Senior AWS Expertise That Speeds Up Delivery**
+> - Your developers get production-ready IaC templates for common patterns: multi-AZ applications, event-driven architectures, secure data pipelines. What takes weeks of research ships in hours
+> - Architecture guidance on VPC design, IAM policies, disaster recovery, and observability from engineers who've solved these problems at enterprise scale
+>
+> [*"We achieved a perfect security score in days, not months."*](https://towardsthecloud.com/blog/case-study-accolade)
+> *Galen Simmons, CEO of Accolade (Y Combinator startup)*
 >
 > </details>
 <!-- TIP-LIST:END -->
