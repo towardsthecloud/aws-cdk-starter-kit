@@ -1,51 +1,53 @@
-import { execSync } from 'node:child_process';
 import * as cdk from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { GitHubActionsOidcConstruct } from '../src/constructs';
 
-test('GitHubActionsOidcConstruct creates default GitHub OIDC provider and deployment role', () => {
-  const previousGithubDeployRole = process.env.GITHUB_DEPLOY_ROLE;
+// Pin the repository identity so the trust policy is asserted against known values instead of
+// whichever checkout the tests happen to run in, and so no test shells out to git or the GitHub CLI.
+const previousEnvironment = { ...process.env };
+
+beforeEach(() => {
+  process.env.GITHUB_REPOSITORY = 'octo-org/octo-repo';
+  process.env.GITHUB_REPOSITORY_ID = '456789';
+  process.env.GITHUB_REPOSITORY_OWNER_ID = '123456';
   delete process.env.GITHUB_DEPLOY_ROLE;
+});
 
-  try {
-    const stack = new cdk.Stack();
+afterEach(() => {
+  process.env = { ...previousEnvironment };
+});
 
-    new GitHubActionsOidcConstruct(stack, 'GitHubActionsOidc', {
-      environment: 'test',
-    });
+test('GitHubActionsOidcConstruct creates default GitHub OIDC provider and deployment role', () => {
+  const stack = new cdk.Stack();
 
-    const { gitOwner, gitRepoName } = getGitRepositoryDetails();
-    const template = Template.fromStack(stack);
-    template.hasResourceProperties('Custom::AWSCDKOpenIdConnectProvider', {
-      Url: 'https://token.actions.githubusercontent.com',
-      ClientIDList: ['sts.amazonaws.com'],
-    });
-    template.hasResourceProperties('AWS::IAM::Role', {
-      RoleName: 'GitHubActionsServiceRole',
-      MaxSessionDuration: 7200,
-      AssumeRolePolicyDocument: {
-        Statement: [
-          Match.objectLike({
-            Action: 'sts:AssumeRoleWithWebIdentity',
-            Condition: {
-              StringEquals: {
-                'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
-              },
-              StringLike: {
-                'token.actions.githubusercontent.com:sub': [`repo:${gitOwner}/${gitRepoName}:environment:test`],
-              },
+  new GitHubActionsOidcConstruct(stack, 'GitHubActionsOidc', {
+    environment: 'test',
+  });
+
+  const template = Template.fromStack(stack);
+  template.hasResourceProperties('Custom::AWSCDKOpenIdConnectProvider', {
+    Url: 'https://token.actions.githubusercontent.com',
+    ClientIDList: ['sts.amazonaws.com'],
+  });
+  template.hasResourceProperties('AWS::IAM::Role', {
+    RoleName: 'GitHubActionsServiceRole',
+    MaxSessionDuration: 7200,
+    AssumeRolePolicyDocument: {
+      Statement: [
+        Match.objectLike({
+          Action: 'sts:AssumeRoleWithWebIdentity',
+          Condition: {
+            StringEquals: {
+              'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
             },
-          }),
-        ],
-      },
-    });
-  } finally {
-    if (previousGithubDeployRole !== undefined) {
-      process.env.GITHUB_DEPLOY_ROLE = previousGithubDeployRole;
-    } else {
-      delete process.env.GITHUB_DEPLOY_ROLE;
-    }
-  }
+            StringLike: {
+              'token.actions.githubusercontent.com:sub': ['repo:octo-org@123456/octo-repo@456789:environment:test'],
+            },
+          },
+        }),
+      ],
+    },
+  });
 });
 
 test('GitHubActionsOidcConstruct allows overriding the max session duration', () => {
@@ -67,10 +69,9 @@ test('GitHubActionsOidcConstruct trusts additional repositories under the same o
 
   new GitHubActionsOidcConstruct(stack, 'GitHubActionsOidc', {
     environment: 'production',
-    additionalRepositories: ['example-cdk-app'],
+    additionalRepositories: [{ name: 'example-cdk-app', id: '987654' }],
   });
 
-  const { gitOwner, gitRepoName } = getGitRepositoryDetails();
   const template = Template.fromStack(stack);
   template.hasResourceProperties('AWS::IAM::Role', {
     AssumeRolePolicyDocument: {
@@ -80,8 +81,8 @@ test('GitHubActionsOidcConstruct trusts additional repositories under the same o
           Condition: {
             StringLike: {
               'token.actions.githubusercontent.com:sub': [
-                `repo:${gitOwner}/${gitRepoName}:environment:production`,
-                `repo:${gitOwner}/example-cdk-app:environment:production`,
+                'repo:octo-org@123456/octo-repo@456789:environment:production',
+                'repo:octo-org@123456/example-cdk-app@987654:environment:production',
               ],
             },
           },
@@ -91,14 +92,15 @@ test('GitHubActionsOidcConstruct trusts additional repositories under the same o
   });
 });
 
-function getGitRepositoryDetails(): { gitOwner: string; gitRepoName: string } {
-  const gitRemoteUrl = execSync('git config --get remote.origin.url').toString().trim();
-  const match = gitRemoteUrl.match(/(?:git@|https:\/\/)([\w.@:]+)[/:]([\w,.,-]+)\/([\w,.,-]+?)(\.git)?$/);
+// A malformed ID would otherwise reach an IAM StringLike condition and widen the trust policy.
+test('GitHubActionsOidcConstruct rejects an additional repository without a numeric ID', () => {
+  const stack = new cdk.Stack();
 
-  if (!match || match.length < 4) {
-    throw new Error('Unable to parse Git repository URL');
-  }
-
-  const [, , gitOwner, gitRepoName] = match;
-  return { gitOwner, gitRepoName };
-}
+  expect(
+    () =>
+      new GitHubActionsOidcConstruct(stack, 'GitHubActionsOidc', {
+        environment: 'production',
+        additionalRepositories: [{ name: 'example-cdk-app', id: '*' }],
+      }),
+  ).toThrow('GitHub repository identity requires a decimal id');
+});
