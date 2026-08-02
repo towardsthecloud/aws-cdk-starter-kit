@@ -83,7 +83,17 @@ This project requires at least **Node.js version 22**.
 
 7. Deploy the GitHub OIDC Stack to enable GitHub Actions workflow permissions for AWS deployments.
 
-8. Commit and push your changes to the `main` branch to trigger the CDK deploy pipeline in GitHub.
+   Local synth resolves your repository's numeric GitHub IDs through `gh api`, so run `gh auth login` first.
+
+8. Opt the repository into immutable OIDC subject claims:
+
+   ```bash
+   gh api -X PUT repos/OWNER/REPOSITORY/actions/oidc/customization/sub -F use_default=true -F use_immutable_subject=true
+   ```
+
+   The deploy role only trusts the immutable claim, so do this after step 7. See [`src/stacks/README.md`](./src/stacks/README.md#github-immutable-oidc-subjects).
+
+9. Commit and push your changes to the `main` branch to trigger the CDK deploy pipeline in GitHub.
 
 Congratulations! You've successfully set up your project.
 

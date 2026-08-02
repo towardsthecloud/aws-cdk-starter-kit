@@ -63,7 +63,6 @@ new s3.Bucket(this, 'MyBucket', {
 
 The `StarterStack` provides a flexible foundation for your AWS CDK project, allowing you to incrementally build and organize your infrastructure as code.
 
-
 ## FoundationStack
 
 The `FoundationStack` sets up fundamental infrastructure components for AWS deployments via GitHub Actions. It combines the functionality of the GitHubOIDCStack with additional features.
@@ -77,6 +76,42 @@ The `FoundationStack` sets up fundamental infrastructure components for AWS depl
 ### Properties
 
 - `environment`: Required. Specifies the deployment stage (e.g., `dev`, `test`, `staging`, `production`).
+- `githubActionsOidc`: Optional. Tunes the deploy role: `additionalRepositories`, `maxSessionDuration`, and `roleName`.
+
+### GitHub immutable OIDC subjects
+
+The deploy role trusts GitHub's immutable subject claim:
+
+```text
+repo:OWNER@OWNER-ID/REPOSITORY@REPOSITORY-ID:environment:ENVIRONMENT
+```
+
+The numeric IDs pin the trust to one repository. Rename it, delete and recreate it, or transfer it to another owner, and the old trust no longer matches.
+
+Your repository has to emit that claim. Opt in through the API, then check it took:
+
+```bash
+gh api -X PUT repos/OWNER/REPOSITORY/actions/oidc/customization/sub -F use_default=true -F use_immutable_subject=true
+gh api repos/OWNER/REPOSITORY/actions/oidc/customization/sub --jq .use_immutable_subject
+```
+
+Deploy the `FoundationStack` first, then flip the setting. There's no fallback to the legacy `repo:OWNER/REPOSITORY:...` subject, so a repository that still emits the old claim can't assume the role.
+
+Synthesis resolves your repository's IDs on its own. GitHub Actions passes them in `GITHUB_REPOSITORY_ID` and `GITHUB_REPOSITORY_OWNER_ID`, so no workflow needs a token. Local synth reads the `origin` remote and calls `gh api`, so run `gh auth login` once.
+
+To trust a second repository under the same owner, pass its name and numeric ID:
+
+```typescript
+new FoundationStack(app, `FoundationStack-${environment}`, {
+  env: awsEnvironment,
+  environment: environment,
+  githubActionsOidc: {
+    additionalRepositories: [{ name: 'my-cdk-app', id: '123456789' }],
+  },
+});
+```
+
+Read the ID with `gh api repos/OWNER/NAME --jq .id`. It's checked in rather than looked up during synth, because a lookup would hand every synthesizing CI job a token that can read the other repository.
 
 ### Example Usage
 

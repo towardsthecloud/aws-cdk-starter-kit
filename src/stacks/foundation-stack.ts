@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { ToolkitCleaner } from 'cloudstructs/lib/toolkit-cleaner';
 import type { Construct } from 'constructs';
+import type { GitHubRepositoryReference } from '../bin/git-helper';
 import { GitHubActionsOidcConstruct } from '../constructs';
 
 /**
@@ -8,11 +9,17 @@ import { GitHubActionsOidcConstruct } from '../constructs';
  */
 export interface FoundationStackGitHubActionsOidcProps {
   /**
-   * Additional repository names, under the same GitHub owner, allowed to assume the deployment role.
+   * Additional repositories, under the same GitHub owner, allowed to assume the deployment role.
+   *
+   * Each entry needs the repository name and its numeric GitHub ID, read with
+   * `gh api repos/OWNER/NAME --jq .id`.
+   *
+   * @example
+   * additionalRepositories: [{ name: 'my-cdk-app', id: '123456789' }]
    *
    * @default - only the repository resolved from the current git remote is trusted
    */
-  readonly additionalRepositories?: string[];
+  readonly additionalRepositories?: GitHubRepositoryReference[];
   /**
    * Maximum session duration for the GitHub Actions deployment role.
    *
