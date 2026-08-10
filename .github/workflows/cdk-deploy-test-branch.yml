@@ -38,7 +38,7 @@ jobs:
           aws-region: us-east-1
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Run CDK synth for the TEST environment
-        run: pnpm run test:branch:synth
+      - name: Validate CDK for the TEST environment
+        run: pnpm run test:branch:validate
       - name: Deploy CDK to the TEST environment on AWS account 987654321012
         run: pnpm run test:branch:deploy:all

@@ -60,7 +60,7 @@
     },
     {
       "name": "aws-cdk-lib",
-      "version": "2.261.0",
+      "version": "2.263.0",
       "type": "runtime"
     },
     {
