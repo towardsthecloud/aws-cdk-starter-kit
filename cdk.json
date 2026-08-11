@@ -1,6 +1,8 @@
 {
   "app": "npx ts-node -P tsconfig.json --prefer-ts-exts src/main.ts",
   "context": {
+    "@aws-cdk/core:annotationsInValidationReport": true,
+    "@aws-cdk/core:validateAgainstDefaultRules": true,
     "cli-telemetry": false
   },
   "output": "cdk.out",

@@ -1,4 +1,4 @@
-import { awscdk, JsonFile, TextFile, YamlFile } from 'projen';
+import { awscdk, JsonFile, TextFile } from 'projen';
 import { NodePackageManager } from 'projen/lib/javascript';
 import { IndentStyle, JsTrailingCommas, QuoteStyle, Semicolons } from 'projen/lib/javascript/biome/biome-config';
 import { createCdkDeploymentWorkflows, createCdkDiffPrWorkflow } from './src/bin/cicd-helper';
@@ -33,7 +33,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   description: 'Create and deploy an AWS CDK app on your AWS account in less than 5 minutes using GitHub actions!',
   cdkVersionPinning: true,
   cdkCliVersion: '2.1130.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
-  cdkVersion: '2.261.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
+  cdkVersion: '2.263.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
   projenVersion: '0.101.11', // Find the latest projen version here: https://www.npmjs.com/package/projen
   defaultReleaseBranch: 'main',
   packageManager: NodePackageManager.PNPM,
@@ -53,6 +53,8 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   deps: ['cloudstructs', 'netmask'], // Runtime dependencies of this module
   devDeps: ['@types/netmask'], // Development dependencies of this module
   context: {
+    '@aws-cdk/core:annotationsInValidationReport': true,
+    '@aws-cdk/core:validateAgainstDefaultRules': true,
     'cli-telemetry': false, // Disable AWS CDK CLI telemetry, see: https://github.com/aws/aws-cdk/issues/34892
   },
   githubOptions: {
@@ -103,6 +105,13 @@ const project = new awscdk.AwsCdkTypeScriptApp({
 project.addTask('lint', {
   description: 'Lint and auto-fix the codebase using Biome',
   exec: 'biome check --no-errors-on-unmatched --write',
+  receiveArgs: true,
+});
+
+// Run comprehensive CDK validation locally without requiring AWS credentials.
+project.addTask('validate', {
+  description: 'Validate the CDK app offline against the comprehensive default rule set',
+  exec: 'cdk --unstable=validate validate --no-online',
   receiveArgs: true,
 });
 

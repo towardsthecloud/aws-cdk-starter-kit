@@ -64,6 +64,10 @@ export function createCdkDiffPrWorkflow(
 
   const diffSteps: github.workflows.Step[] = [
     {
+      name: `Validate CDK for the ${highestEnv.toUpperCase()} environment`,
+      run: `pnpm run ${getTaskName(highestEnv, 'validate')}`,
+    },
+    {
       name: 'CDK diff and notify PR',
       run: `pnpm run ${getTaskName(highestEnv, 'diff', { taskType: 'all' })} > cdk-diff-output.txt 2>&1 || true`,
     },
@@ -189,8 +193,8 @@ function createCdkDeploymentWorkflow(
 
   const deploymentSteps: github.workflows.Step[] = [
     {
-      name: `Run CDK synth for the ${env.toUpperCase()} environment`,
-      run: `pnpm run ${getTaskName(env, 'synth', { isBranch: deployForBranch })}`,
+      name: `Validate CDK for the ${env.toUpperCase()} environment`,
+      run: `pnpm run ${getTaskName(env, 'validate', { isBranch: deployForBranch })}`,
     },
     {
       name: `Deploy CDK to the ${env.toUpperCase()} environment on AWS account ${account}`,

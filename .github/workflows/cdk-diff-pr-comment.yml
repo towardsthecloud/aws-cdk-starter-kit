@@ -34,6 +34,8 @@ jobs:
           aws-region: us-east-1
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Validate CDK for the PRODUCTION environment
+        run: pnpm run production:validate
       - name: CDK diff and notify PR
         run: pnpm run production:diff:all > cdk-diff-output.txt 2>&1 || true
       - name: Post CDK Diff Comment in PR

@@ -349,6 +349,22 @@
         }
       ]
     },
+    "production:validate": {
+      "name": "production:validate",
+      "description": "Validate the stacks on the PRODUCTION account",
+      "env": {
+        "CDK_DEFAULT_ACCOUNT": "123456789012",
+        "CDK_DEFAULT_REGION": "us-east-1",
+        "ENVIRONMENT": "production",
+        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole"
+      },
+      "steps": [
+        {
+          "exec": "cdk --unstable=validate validate",
+          "receiveArgs": true
+        }
+      ]
+    },
     "release": {
       "name": "release",
       "description": "Prepare a release from \"main\" branch",
@@ -575,6 +591,23 @@
         }
       ]
     },
+    "test:branch:validate": {
+      "name": "test:branch:validate",
+      "description": "Validate the stacks on the TEST account",
+      "env": {
+        "CDK_DEFAULT_ACCOUNT": "987654321012",
+        "CDK_DEFAULT_REGION": "us-east-1",
+        "ENVIRONMENT": "test",
+        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole",
+        "GIT_BRANCH_REF": "$(echo ${GIT_BRANCH_REF:-$(git rev-parse --abbrev-ref HEAD)})"
+      },
+      "steps": [
+        {
+          "exec": "cdk --unstable=validate validate",
+          "receiveArgs": true
+        }
+      ]
+    },
     "test:deploy:all": {
       "name": "test:deploy:all",
       "description": "Deploy all stacks on the TEST account",
@@ -698,6 +731,22 @@
         }
       ]
     },
+    "test:validate": {
+      "name": "test:validate",
+      "description": "Validate the stacks on the TEST account",
+      "env": {
+        "CDK_DEFAULT_ACCOUNT": "987654321012",
+        "CDK_DEFAULT_REGION": "us-east-1",
+        "ENVIRONMENT": "test",
+        "GITHUB_DEPLOY_ROLE": "GitHubActionsServiceRole"
+      },
+      "steps": [
+        {
+          "exec": "cdk --unstable=validate validate",
+          "receiveArgs": true
+        }
+      ]
+    },
     "test:watch": {
       "name": "test:watch",
       "description": "Run jest in watch mode",
@@ -775,6 +824,16 @@
         },
         {
           "spawn": "post-upgrade"
+        }
+      ]
+    },
+    "validate": {
+      "name": "validate",
+      "description": "Validate the CDK app offline against the comprehensive default rule set",
+      "steps": [
+        {
+          "exec": "cdk --unstable=validate validate --no-online",
+          "receiveArgs": true
         }
       ]
     },

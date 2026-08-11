@@ -2,7 +2,15 @@ import type { awscdk } from 'projen';
 
 /** Represents the possible deployment environments. */
 export type Environment = 'sandbox' | 'development' | 'test' | 'staging' | 'production';
-export const SUPPORTED_CDK_ACTIONS = ['synth', 'diff', 'deploy', 'deploy:hotswap', 'destroy', 'ls'] as const;
+export const SUPPORTED_CDK_ACTIONS = [
+  'synth',
+  'validate',
+  'diff',
+  'deploy',
+  'deploy:hotswap',
+  'destroy',
+  'ls',
+] as const;
 
 /** Configuration settings for a specific environment. */
 export interface EnvironmentConfig {
@@ -44,8 +52,8 @@ export function getTaskName(
 
   let taskName = isBranch ? `${environment}:branch:${action}` : `${environment}:${action}`;
 
-  // Add task type suffix for actions that support it (not synth or ls)
-  if (taskType && action !== 'synth' && action !== 'ls') {
+  // Add task type suffix for actions that support it (not synth, validate, or ls)
+  if (taskType && action !== 'synth' && action !== 'validate' && action !== 'ls') {
     taskName += `:${taskType}`;
   }
 
@@ -53,11 +61,12 @@ export function getTaskName(
 }
 
 /**
- * Adds customized 'pnpm run' commands for executing AWS CDK actions (synth, diff, deploy, deploy:hotswap, destroy, ls)
+ * Adds customized 'pnpm run' commands for executing AWS CDK actions
+ * (synth, validate, diff, deploy, deploy:hotswap, destroy, ls)
  * for a specific environment and branch (if applicable).
  *
  * Creates different task variants:
- * - For synth/ls: Single task that operates on all stacks
+ * - For synth/validate/ls: Single task that operates on all stacks
  * - For deploy/destroy/diff/deploy:hotswap: Two variants (:all for all stacks, :stack for specific stacks)
  * - Branch deployments get "branch" in the task name when GIT_BRANCH_REF is present
  * - Hotswap deployments are only available for branch deployments (when GIT_BRANCH_REF is present)
@@ -72,6 +81,7 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
   const expressModeArg = useExpressMode ? ' --express' : '';
   const commandMap = {
     synth: 'cdk synth',
+    validate: 'cdk --unstable=validate validate',
     destroy: `cdk destroy${expressModeArg} --force`,
     deploy: `cdk deploy${expressModeArg} --require-approval never`,
     'deploy:hotswap': 'cdk deploy --hotswap --require-approval never',
@@ -92,11 +102,12 @@ export function addCdkActionTask(cdkProject: awscdk.AwsCdkTypeScriptApp, targetA
     const execCommand = commandMap[action];
     const baseTaskName = getTaskName(targetAccount.ENVIRONMENT, action, { isBranch });
 
-    if (action === 'synth' || action === 'ls') {
+    if (action === 'synth' || action === 'validate' || action === 'ls') {
       cdkProject.addTask(baseTaskName, {
         description: createDescription(action, 'the stacks'),
         env: targetAccount,
         exec: execCommand,
+        ...(action === 'validate' ? { receiveArgs: true } : {}),
       });
     } else {
       const actionLabel = action === 'deploy:hotswap' ? 'hotswap deploy' : action;
