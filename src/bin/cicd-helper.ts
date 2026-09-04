@@ -3,11 +3,7 @@ import { github } from 'projen';
 import { getTaskName } from './env-helper';
 
 const COMMON_RUNS_ON = ['ubuntu-latest'];
-/**
- * Pinned GitHub Actions used by every workflow in this repo. `.projenrc.ts` registers these
- * with projen's actions provider so projen-managed workflows (build, release, upgrade,
- * pull-request-lint) render the same versions as the workflows built here.
- */
+/** Pinned GitHub Actions used by every workflow in this repo. */
 export const GITHUB_ACTIONS = {
   checkout: 'actions/checkout@v7',
   setupNode: 'actions/setup-node@v7',
@@ -15,6 +11,16 @@ export const GITHUB_ACTIONS = {
   configureAwsCredentials: 'aws-actions/configure-aws-credentials@v6',
   cdkDiffPrCommenter: 'towardsthecloud/aws-cdk-diff-pr-commenter@v1',
 } as const;
+
+/**
+ * Registers `GITHUB_ACTIONS` with projen's actions provider so projen-managed workflows
+ * (build, release, upgrade, pull-request-lint) render the same versions as the workflows built here.
+ */
+export function pinGithubActions(gh: github.GitHub): void {
+  for (const action of Object.values(GITHUB_ACTIONS)) {
+    gh.actions.set(action.split('@')[0], action);
+  }
+}
 const BRANCH_EXCLUSIONS = ['main', 'hotfix/*', 'github-actions/*', 'dependabot/**'];
 /** Standard permissions required for CDK deployment workflows. */
 const COMMON_WORKFLOW_PERMISSIONS = {
