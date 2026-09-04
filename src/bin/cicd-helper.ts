@@ -10,6 +10,10 @@ export const GITHUB_ACTIONS = {
   setupPnpm: 'pnpm/action-setup@v6',
   configureAwsCredentials: 'aws-actions/configure-aws-credentials@v6',
   cdkDiffPrCommenter: 'towardsthecloud/aws-cdk-diff-pr-commenter@v1',
+  createPullRequest: 'peter-evans/create-pull-request@v8',
+  downloadArtifact: 'actions/download-artifact@v8',
+  semanticPullRequest: 'amannn/action-semantic-pull-request@v6',
+  uploadArtifact: 'actions/upload-artifact@v7',
 } as const;
 
 /**

@@ -76,7 +76,7 @@ jobs:
       - name: Upload artifact
         id: upload_artifact
         if: ${{ steps.git_remote.outputs.latest_commit == github.sha }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@v7
         with:
           name: build-artifact
           path: dist
@@ -95,7 +95,7 @@ jobs:
           package-manager-cache: false
       - name: Download build artifacts
         id: download_build_artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        uses: actions/download-artifact@v8
         with:
           artifact-ids: ${{ needs.release.outputs.artifact_id }}
           path: dist
