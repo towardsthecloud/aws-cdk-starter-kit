@@ -21,6 +21,8 @@ jobs:
       - name: Checkout repository
         id: checkout_repository
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup pnpm
         id: setup_pnpm
         uses: pnpm/action-setup@v6
