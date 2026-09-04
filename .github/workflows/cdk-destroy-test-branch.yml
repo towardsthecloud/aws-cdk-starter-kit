@@ -20,31 +20,38 @@ jobs:
     environment: test
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        id: checkout_repository
+        uses: actions/checkout@v7
       - name: Setup pnpm
+        id: setup_pnpm
         uses: pnpm/action-setup@v6
       - name: Setup nodejs environment
-        uses: actions/setup-node@v6
+        id: setup_nodejs_environment
+        uses: actions/setup-node@v7
         with:
-          node-version: ">=24.18.0"
+          node-version: ">=24.20.0"
           cache: pnpm
       - name: Configure AWS credentials
+        id: configure_aws_credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::987654321012:role/GitHubActionsServiceRole
           aws-region: us-east-1
       - name: Install dependencies
+        id: install_dependencies
         run: pnpm install --frozen-lockfile
       - name: Fetch Deleted Branch Name
         id: destroy-branch
         if: github.event.ref_type == 'branch' && github.event_name == 'delete'
         run: BRANCH=$(cat ${{ github.event_path }} | jq --raw-output '.ref'); echo "${{ github.repository }} has ${BRANCH} branch"; echo "DESTROY_BRANCH_NAME=$BRANCH" >> $GITHUB_OUTPUT
       - name: Destroy Branch Stack (Workflow Dispatch)
+        id: destroy_branch_stack_workflow_dispatch
         if: github.event_name == 'workflow_dispatch'
         env:
           GIT_BRANCH_REF: ${{ github.ref_name }}
         run: pnpm run test:branch:destroy:all
       - name: Destroy Branch Stack (Branch Deletion)
+        id: destroy_branch_stack_branch_deletion
         if: github.event.ref_type == 'branch' && github.event_name == 'delete'
         env:
           GIT_BRANCH_REF: ${{ steps.destroy-branch.outputs.DESTROY_BRANCH_NAME }}

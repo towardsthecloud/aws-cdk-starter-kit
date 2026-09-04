@@ -17,28 +17,36 @@ jobs:
       AWS_REGION: us-east-1
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        id: checkout_repository
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup pnpm
+        id: setup_pnpm
         uses: pnpm/action-setup@v6
       - name: Setup nodejs environment
-        uses: actions/setup-node@v6
+        id: setup_nodejs_environment
+        uses: actions/setup-node@v7
         with:
-          node-version: ">=24.18.0"
+          node-version: ">=24.20.0"
           cache: pnpm
       - name: Configure AWS credentials
+        id: configure_aws_credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsServiceRole
           aws-region: us-east-1
       - name: Install dependencies
+        id: install_dependencies
         run: pnpm install --frozen-lockfile
       - name: Validate CDK for the PRODUCTION environment
+        id: validate_cdk_for_the_production_environment
         run: pnpm run production:validate
       - name: CDK diff and notify PR
+        id: cdk_diff_and_notify_pr
         run: pnpm run production:diff:all > cdk-diff-output.txt 2>&1 || true
       - name: Post CDK Diff Comment in PR
+        id: post_cdk_diff_comment_in_pr
         uses: towardsthecloud/aws-cdk-diff-pr-commenter@v1
         with:
           diff-file: cdk-diff-output.txt
