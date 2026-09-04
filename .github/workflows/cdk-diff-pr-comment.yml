@@ -20,6 +20,7 @@ jobs:
         id: checkout_repository
         uses: actions/checkout@v7
         with:
+          persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup pnpm
         id: setup_pnpm
