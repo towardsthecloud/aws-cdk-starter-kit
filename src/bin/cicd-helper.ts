@@ -3,6 +3,18 @@ import { github } from 'projen';
 import { getTaskName } from './env-helper';
 
 const COMMON_RUNS_ON = ['ubuntu-latest'];
+/**
+ * Pinned GitHub Actions used by every workflow in this repo. `.projenrc.ts` registers these
+ * with projen's actions provider so projen-managed workflows (build, release, upgrade,
+ * pull-request-lint) render the same versions as the workflows built here.
+ */
+export const GITHUB_ACTIONS = {
+  checkout: 'actions/checkout@v7',
+  setupNode: 'actions/setup-node@v7',
+  setupPnpm: 'pnpm/action-setup@v6',
+  configureAwsCredentials: 'aws-actions/configure-aws-credentials@v6',
+  cdkDiffPrCommenter: 'towardsthecloud/aws-cdk-diff-pr-commenter@v1',
+} as const;
 const BRANCH_EXCLUSIONS = ['main', 'hotfix/*', 'github-actions/*', 'dependabot/**'];
 /** Standard permissions required for CDK deployment workflows. */
 const COMMON_WORKFLOW_PERMISSIONS = {
@@ -111,7 +123,7 @@ export function createCdkDiffPrWorkflow(
     },
     {
       name: 'Post CDK Diff Comment in PR',
-      uses: 'towardsthecloud/aws-cdk-diff-pr-commenter@v1',
+      uses: GITHUB_ACTIONS.cdkDiffPrCommenter,
       with: {
         'diff-file': 'cdk-diff-output.txt',
         'aws-region': `${region}`,
@@ -342,7 +354,7 @@ function createCdkDestroyWorkflow(
 function getCheckoutStep(ref?: string): github.workflows.Step {
   const step: github.workflows.Step = {
     name: 'Checkout repository',
-    uses: 'actions/checkout@v7',
+    uses: GITHUB_ACTIONS.checkout,
   };
 
   if (ref) {
@@ -363,7 +375,7 @@ function getCheckoutStep(ref?: string): github.workflows.Step {
 function getSetupPnpmStep(): github.workflows.Step {
   return {
     name: 'Setup pnpm',
-    uses: 'pnpm/action-setup@v6',
+    uses: GITHUB_ACTIONS.setupPnpm,
   };
 }
 
@@ -375,7 +387,7 @@ function getSetupPnpmStep(): github.workflows.Step {
 function getSetupNodeStep(nodeVersion: string): github.workflows.Step {
   return {
     name: 'Setup nodejs environment',
-    uses: 'actions/setup-node@v7',
+    uses: GITHUB_ACTIONS.setupNode,
     with: {
       'node-version': nodeVersion ? `>=${nodeVersion}` : 'latest',
       cache: 'pnpm',
@@ -435,7 +447,7 @@ function getCommonWorkflowSteps(
 function getAwsCredentialsStep(account: string, region: string, roleName: string): github.workflows.Step {
   return {
     name: 'Configure AWS credentials',
-    uses: 'aws-actions/configure-aws-credentials@v6',
+    uses: GITHUB_ACTIONS.configureAwsCredentials,
     with: {
       'role-to-assume': `arn:aws:iam::${account}:role/${roleName}`,
       'aws-region': region,

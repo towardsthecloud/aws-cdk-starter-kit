@@ -5,6 +5,7 @@ import {
   createCdkDeploymentWorkflows,
   createCdkDiffPrWorkflow,
   createCdkValidateWorkflow,
+  GITHUB_ACTIONS,
 } from './src/bin/cicd-helper';
 import { addCdkActionTask, type Environment, type EnvironmentConfig } from './src/bin/env-helper';
 
@@ -158,10 +159,10 @@ const environmentConfigs: (EnvironmentConfig & { name: Environment })[] = [
 if (project.github) {
   const orderedEnvironments = environmentConfigs.map((env) => env.name);
 
-  // Pin the actions used by projen-managed workflows (build, release, upgrade, pull-request-lint) to their latest majors
-  project.github.actions.set('actions/checkout', 'actions/checkout@v7');
-  project.github.actions.set('actions/setup-node', 'actions/setup-node@v7');
-  project.github.actions.set('pnpm/action-setup', 'pnpm/action-setup@v6');
+  // Keep projen-managed workflows (build, release, upgrade, pull-request-lint) on the same action versions
+  for (const action of Object.values(GITHUB_ACTIONS)) {
+    project.github.actions.set(action.split('@')[0], action);
+  }
 
   // Validate the CDK app offline on every pull request (no AWS credentials required)
   createCdkValidateWorkflow(project.github, nodeVersion);
