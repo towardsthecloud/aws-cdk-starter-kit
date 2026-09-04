@@ -22,22 +22,29 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        id: checkout_repository
+        uses: actions/checkout@v7
       - name: Setup pnpm
+        id: setup_pnpm
         uses: pnpm/action-setup@v6
       - name: Setup nodejs environment
-        uses: actions/setup-node@v6
+        id: setup_nodejs_environment
+        uses: actions/setup-node@v7
         with:
-          node-version: ">=24.18.0"
+          node-version: ">=24.20.0"
           cache: pnpm
       - name: Configure AWS credentials
+        id: configure_aws_credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::123456789012:role/GitHubActionsServiceRole
           aws-region: us-east-1
       - name: Install dependencies
+        id: install_dependencies
         run: pnpm install --frozen-lockfile
       - name: Validate CDK for the PRODUCTION environment
+        id: validate_cdk_for_the_production_environment
         run: pnpm run production:validate
       - name: Deploy CDK to the PRODUCTION environment on AWS account 123456789012
+        id: deploy_cdk_to_the_production_environment_on_aws_account_123456789012
         run: pnpm run production:deploy:all

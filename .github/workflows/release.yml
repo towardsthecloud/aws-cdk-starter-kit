@@ -28,25 +28,31 @@ jobs:
       CI: "true"
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        id: checkout
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set git identity
+        id: set_git_identity
         run: |-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Setup pnpm
-        uses: pnpm/action-setup@v5
+        id: setup_pnpm
+        uses: pnpm/action-setup@v6
         with:
-          version: 11.15.1
+          version: 12.0.0
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        id: setup_node_js
+        uses: actions/setup-node@v7
         with:
-          node-version: 24.18.0
+          node-version: 24.20.0
           package-manager-cache: false
       - name: Install dependencies
+        id: install_dependencies
         run: pnpm i --frozen-lockfile
       - name: release
+        id: release
         run: pnpm exec projen release
       - name: Check if version has already been tagged
         id: check_tag_exists
@@ -56,18 +62,21 @@ jobs:
           cat $GITHUB_OUTPUT
       - name: Check for new commits
         id: git_remote
+        env:
+          GITHUB_REF: ${{ github.ref }}
         run: |-
-          echo "latest_commit=$(git ls-remote origin -h ${{ github.ref }} | cut -f1)" >> $GITHUB_OUTPUT
+          echo "latest_commit=$(git ls-remote origin -h "$GITHUB_REF" | cut -f1)" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
         shell: bash
       - name: Backup artifact permissions
+        id: backup_artifact_permissions
         if: ${{ steps.git_remote.outputs.latest_commit == github.sha }}
         run: cd dist && getfacl -R . > permissions-backup.acl
         continue-on-error: true
       - name: Upload artifact
         id: upload_artifact
         if: ${{ steps.git_remote.outputs.latest_commit == github.sha }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: build-artifact
           path: dist
@@ -80,20 +89,33 @@ jobs:
       contents: write
     if: needs.release.outputs.tag_exists != 'true' && needs.release.outputs.latest_commit == github.sha
     steps:
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
-          node-version: 24.18.0
+          node-version: 24.20.0
           package-manager-cache: false
       - name: Download build artifacts
-        uses: actions/download-artifact@v8
+        id: download_build_artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           artifact-ids: ${{ needs.release.outputs.artifact_id }}
           path: dist
       - name: Restore build artifact permissions
+        id: restore_build_artifact_permissions
         run: cd dist && setfacl --restore=permissions-backup.acl
         continue-on-error: true
       - name: Release
+        id: release
         if: ${{ !inputs.dry_run }}
         env:
+          RELEASE_TAG_FILE: dist/releasetag.txt
+          CHANGELOG_FILE: dist/changelog.md
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: errout=$(mktemp); gh release create $(cat dist/releasetag.txt) -R $GITHUB_REPOSITORY -F dist/changelog.md -t $(cat dist/releasetag.txt) --target $GITHUB_SHA 2> $errout && true; exitcode=$?; if [ $exitcode -ne 0 ] && ! grep -q "Release.tag_name already exists" $errout; then cat $errout; exit $exitcode; fi
+        run: |-
+          errout=$(mktemp)
+          tag=$(cat "$RELEASE_TAG_FILE")
+          gh release create "$tag" -R "$GITHUB_REPOSITORY" -F "$CHANGELOG_FILE" -t "$tag" --target "$GITHUB_SHA" ${PRERELEASE:+-p} 2> "$errout" && true
+          exitcode=$?
+          if [ $exitcode -ne 0 ] && ! grep -q "Release.tag_name already exists" "$errout"; then
+            cat "$errout"
+            exit $exitcode
+          fi

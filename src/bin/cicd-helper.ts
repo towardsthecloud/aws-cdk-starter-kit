@@ -11,6 +11,44 @@ const COMMON_WORKFLOW_PERMISSIONS = {
 };
 
 /**
+ * Creates a GitHub workflow that validates the CDK app offline on pull requests.
+ *
+ * Runs the root `validate` task (`cdk validate --no-online`) so pull requests are checked
+ * against the default rule set without AWS credentials.
+ *
+ * @param gh - An instance of the `github.GitHub` class, used to create the GitHub workflow.
+ * @param nodeVersion - The version of Node.js to be used.
+ * @returns The created `github.GithubWorkflow` instance.
+ */
+export function createCdkValidateWorkflow(gh: github.GitHub, nodeVersion: string): github.GithubWorkflow {
+  const workflow = new github.GithubWorkflow(gh, 'cdk-validate');
+
+  workflow.on({
+    pullRequest: {},
+    workflowDispatch: {},
+  });
+
+  workflow.addJobs({
+    validate: {
+      name: 'Validate CDK app offline',
+      runsOn: COMMON_RUNS_ON,
+      permissions: {
+        contents: github.workflows.JobPermission.READ,
+      },
+      steps: [
+        ...getCommonWorkflowSteps(nodeVersion),
+        {
+          name: 'Validate CDK app against the default rule set',
+          run: 'pnpm run validate',
+        },
+      ],
+    },
+  });
+
+  return workflow;
+}
+
+/**
  * Creates a GitHub workflow for generating CDK diff on pull requests.
  *
  * This workflow triggers on pull_request_target events to the main branch and:
@@ -304,7 +342,7 @@ function createCdkDestroyWorkflow(
 function getCheckoutStep(ref?: string): github.workflows.Step {
   const step: github.workflows.Step = {
     name: 'Checkout repository',
-    uses: 'actions/checkout@v6',
+    uses: 'actions/checkout@v7',
   };
 
   if (ref) {
@@ -337,7 +375,7 @@ function getSetupPnpmStep(): github.workflows.Step {
 function getSetupNodeStep(nodeVersion: string): github.workflows.Step {
   return {
     name: 'Setup nodejs environment',
-    uses: 'actions/setup-node@v6',
+    uses: 'actions/setup-node@v7',
     with: {
       'node-version': nodeVersion ? `>=${nodeVersion}` : 'latest',
       cache: 'pnpm',

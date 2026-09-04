@@ -2,7 +2,7 @@
 {
   "assist": {
     "actions": {
-      "recommended": true
+      "preset": "recommended"
     },
     "enabled": true
   },
@@ -20,6 +20,7 @@
       "!.github/workflows/cdk-deploy-test.yml",
       "!.github/workflows/cdk-destroy-test-branch.yml",
       "!.github/workflows/cdk-diff-pr-comment.yml",
+      "!.github/workflows/cdk-validate.yml",
       "!.github/workflows/pull-request-lint.yml",
       "!.github/workflows/release.yml",
       "!.github/workflows/upgrade-main.yml",
@@ -54,7 +55,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "preset": "recommended"
     }
   },
   "vcs": {

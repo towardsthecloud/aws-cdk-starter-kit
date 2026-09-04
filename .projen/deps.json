@@ -2,7 +2,7 @@
   "dependencies": [
     {
       "name": "@biomejs/biome",
-      "version": "^2",
+      "version": "^2.5",
       "type": "build"
     },
     {
@@ -20,7 +20,7 @@
     },
     {
       "name": "aws-cdk",
-      "version": "2.1130.0",
+      "version": "2.1139.0",
       "type": "build"
     },
     {
@@ -43,7 +43,7 @@
     },
     {
       "name": "projen",
-      "version": "0.101.11",
+      "version": "0.103.5",
       "type": "build"
     },
     {
@@ -60,7 +60,7 @@
     },
     {
       "name": "aws-cdk-lib",
-      "version": "2.263.0",
+      "version": "2.267.0",
       "type": "runtime"
     },
     {
