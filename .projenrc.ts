@@ -10,7 +10,7 @@ import {
 import { addCdkActionTask, type Environment, type EnvironmentConfig } from './src/bin/env-helper';
 
 // Set the minimum node version for AWS CDK and the GitHub actions workflow
-const nodeVersion = '24.20.0';
+const nodeVersion = '24.21.0';
 
 /**
  * Define the AWS region for the CDK app and github workflows
@@ -37,12 +37,12 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   name: 'aws-cdk-starter-kit',
   description: 'Create and deploy an AWS CDK app on your AWS account in less than 5 minutes using GitHub actions!',
   cdkVersionPinning: true,
-  cdkCliVersion: '2.1139.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
-  cdkVersion: '2.267.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
-  projenVersion: '0.103.5', // Find the latest projen version here: https://www.npmjs.com/package/projen
+  cdkCliVersion: '2.1143.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
+  cdkVersion: '2.271.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
+  projenVersion: '0.103.27', // Find the latest projen version here: https://www.npmjs.com/package/projen
   defaultReleaseBranch: 'main',
   packageManager: NodePackageManager.PNPM,
-  pnpmVersion: '12.0.0', // Find the latest pnpm version here: https://www.npmjs.com/package/pnpm
+  pnpmVersion: '12.7.0', // Find the latest pnpm version here: https://www.npmjs.com/package/pnpm
   pnpmOptions: {
     workspaceYamlOptions: {
       minimumReleaseAge: 7 * 24 * 60, // 7 days in minutes
