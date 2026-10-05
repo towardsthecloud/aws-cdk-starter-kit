@@ -7,8 +7,8 @@ on:
     branches:
       - "**"
       - "!main"
-      - "!hotfix/*"
-      - "!github-actions/*"
+      - "!hotfix/**"
+      - "!github-actions/**"
       - "!dependabot/**"
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}

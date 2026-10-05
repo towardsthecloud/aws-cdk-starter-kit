@@ -25,7 +25,7 @@ export function pinGithubActions(gh: github.GitHub): void {
     gh.actions.set(action.split('@')[0], action);
   }
 }
-const BRANCH_EXCLUSIONS = ['main', 'hotfix/*', 'github-actions/*', 'dependabot/**'];
+const BRANCH_EXCLUSIONS = ['main', 'hotfix/**', 'github-actions/**', 'dependabot/**'];
 /** Standard permissions required for CDK deployment workflows. */
 const COMMON_WORKFLOW_PERMISSIONS = {
   contents: github.workflows.JobPermission.READ,
