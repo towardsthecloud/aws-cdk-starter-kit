@@ -1,6 +1,7 @@
 {
   "files": [
     ".gitattributes",
+    ".github/actionlint.yaml",
     ".github/pull_request_template.md",
     ".github/workflows/build.yml",
     ".github/workflows/cdk-deploy-production.yml",

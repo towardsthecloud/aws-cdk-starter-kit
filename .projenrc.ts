@@ -1,4 +1,4 @@
-import { awscdk, JsonFile, TextFile } from 'projen';
+import { awscdk, JsonFile, TextFile, YamlFile } from 'projen';
 import { NodePackageManager } from 'projen/lib/javascript';
 import { IndentStyle, JsTrailingCommas, QuoteStyle, Semicolons } from 'projen/lib/javascript/biome/biome-config';
 import {
@@ -123,6 +123,17 @@ project.addTask('validate', {
 // Create .nvmrc file with the Node.js version (useful for autoswitching node environment locally)
 new TextFile(project, '.nvmrc', {
   lines: [`v${nodeVersion}`],
+});
+
+// Ignore shellcheck info findings in the workflows projen generates, so actionlint passes
+new YamlFile(project, '.github/actionlint.yaml', {
+  obj: {
+    paths: {
+      '.github/workflows/{build,release,upgrade-main}.yml': {
+        ignore: ['shellcheck reported issue in this script: SC(2086|2015):info:.+'],
+      },
+    },
+  },
 });
 
 // Add VSCode extensions recommendation

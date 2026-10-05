@@ -14,6 +14,7 @@
       ".projenrc.ts",
       "projenrc/**",
       "!.gitattributes",
+      "!.github/actionlint.yaml",
       "!.github/workflows/build.yml",
       "!.github/workflows/cdk-deploy-production.yml",
       "!.github/workflows/cdk-deploy-test-branch.yml",

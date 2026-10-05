@@ -307,38 +307,23 @@ function createCdkDestroyWorkflow(
   const workflowName = `cdk-destroy-${env}-branch`;
   const cdkDestroyWorkflow = new github.GithubWorkflow(gh, workflowName);
 
-  const workflowTriggers = {
-    workflowDispatch: {},
-    delete: {
-      branches: ['**', ...BRANCH_EXCLUSIONS.map((branch) => `!${branch}`)],
-    },
-  };
+  cdkDestroyWorkflow.on({ workflowDispatch: {}, delete: {} });
 
-  cdkDestroyWorkflow.on(workflowTriggers);
+  // The delete event does not support branch filters, so exclude branches in the job condition
+  const branchExclusions = BRANCH_EXCLUSIONS.map((branch) =>
+    branch.includes('*')
+      ? `!startsWith(github.event.ref, '${branch.replace(/\*+$/, '')}')`
+      : `github.event.ref != '${branch}'`,
+  ).join(' && ');
 
   const commonWorkflowSteps = getCommonWorkflowSteps(nodeVersion, account, region, githubDeployRole);
 
   const destroySteps = [
     {
-      name: 'Fetch Deleted Branch Name',
-      id: 'destroy-branch',
-      if: "github.event.ref_type == 'branch' && github.event_name == 'delete'",
-      run: 'BRANCH=$(cat ${{ github.event_path }} | jq --raw-output \'.ref\'); echo "${{ github.repository }} has ${BRANCH} branch"; echo "DESTROY_BRANCH_NAME=$BRANCH" >> $GITHUB_OUTPUT',
-    },
-    {
-      name: 'Destroy Branch Stack (Workflow Dispatch)',
-      if: "github.event_name == 'workflow_dispatch'",
+      name: 'Destroy Branch Stack',
       run: `pnpm run ${getTaskName(env, 'destroy', { isBranch: true, taskType: 'all' })}`,
       env: {
-        GIT_BRANCH_REF: '${{ github.ref_name }}',
-      },
-    },
-    {
-      name: 'Destroy Branch Stack (Branch Deletion)',
-      if: "github.event.ref_type == 'branch' && github.event_name == 'delete'",
-      run: `pnpm run ${getTaskName(env, 'destroy', { isBranch: true, taskType: 'all' })}`,
-      env: {
-        GIT_BRANCH_REF: '${{ steps.destroy-branch.outputs.DESTROY_BRANCH_NAME }}',
+        GIT_BRANCH_REF: "${{ github.event_name == 'delete' && github.event.ref || github.ref_name }}",
       },
     },
   ];
@@ -346,6 +331,7 @@ function createCdkDestroyWorkflow(
   cdkDestroyWorkflow.addJobs({
     destroy: {
       name: 'Remove deployment of feature branch',
+      if: `github.event_name == 'workflow_dispatch' || (github.event.ref_type == 'branch' && ${branchExclusions})`,
       runsOn: COMMON_RUNS_ON,
       environment: env,
       permissions: COMMON_WORKFLOW_PERMISSIONS,
