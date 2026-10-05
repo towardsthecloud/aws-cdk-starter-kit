@@ -14,6 +14,7 @@
       ".projenrc.ts",
       "projenrc/**",
       "!.gitattributes",
+      "!.github/actionlint.yaml",
       "!.github/workflows/build.yml",
       "!.github/workflows/cdk-deploy-production.yml",
       "!.github/workflows/cdk-deploy-test-branch.yml",
@@ -68,5 +69,5 @@
       "allowComments": true
     }
   },
-  "$schema": "node_modules/.pnpm/@biomejs+biome@2.5.3/node_modules/@biomejs/biome/configuration_schema.json"
+  "$schema": "node_modules/.pnpm/@biomejs+biome@2.5.14/node_modules/@biomejs/biome/configuration_schema.json"
 }

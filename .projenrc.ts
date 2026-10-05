@@ -1,4 +1,4 @@
-import { awscdk, JsonFile, TextFile } from 'projen';
+import { awscdk, JsonFile, TextFile, YamlFile } from 'projen';
 import { NodePackageManager } from 'projen/lib/javascript';
 import { IndentStyle, JsTrailingCommas, QuoteStyle, Semicolons } from 'projen/lib/javascript/biome/biome-config';
 import {
@@ -10,7 +10,7 @@ import {
 import { addCdkActionTask, type Environment, type EnvironmentConfig } from './src/bin/env-helper';
 
 // Set the minimum node version for AWS CDK and the GitHub actions workflow
-const nodeVersion = '24.20.0';
+const nodeVersion = '24.21.0';
 
 /**
  * Define the AWS region for the CDK app and github workflows
@@ -37,12 +37,12 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   name: 'aws-cdk-starter-kit',
   description: 'Create and deploy an AWS CDK app on your AWS account in less than 5 minutes using GitHub actions!',
   cdkVersionPinning: true,
-  cdkCliVersion: '2.1139.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
-  cdkVersion: '2.267.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
-  projenVersion: '0.103.5', // Find the latest projen version here: https://www.npmjs.com/package/projen
+  cdkCliVersion: '2.1143.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
+  cdkVersion: '2.271.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
+  projenVersion: '0.103.27', // Find the latest projen version here: https://www.npmjs.com/package/projen
   defaultReleaseBranch: 'main',
   packageManager: NodePackageManager.PNPM,
-  pnpmVersion: '12.0.0', // Find the latest pnpm version here: https://www.npmjs.com/package/pnpm
+  pnpmVersion: '12.7.0', // Find the latest pnpm version here: https://www.npmjs.com/package/pnpm
   pnpmOptions: {
     workspaceYamlOptions: {
       minimumReleaseAge: 7 * 24 * 60, // 7 days in minutes
@@ -123,6 +123,17 @@ project.addTask('validate', {
 // Create .nvmrc file with the Node.js version (useful for autoswitching node environment locally)
 new TextFile(project, '.nvmrc', {
   lines: [`v${nodeVersion}`],
+});
+
+// Ignore shellcheck info findings in the workflows projen generates, so actionlint passes
+new YamlFile(project, '.github/actionlint.yaml', {
+  obj: {
+    paths: {
+      '.github/workflows/{build,release,upgrade-main}.yml': {
+        ignore: ['shellcheck reported issue in this script: SC(2086|2015):info:.+'],
+      },
+    },
+  },
 });
 
 // Add VSCode extensions recommendation

@@ -65,6 +65,7 @@ junit.xml
 .cdk.staging/
 .parcel-cache/
 !/.nvmrc
+!/.github/actionlint.yaml
 !/.vscode/extensions.json
 !/.github/workflows/cdk-validate.yml
 !/.github/workflows/cdk-deploy-test.yml

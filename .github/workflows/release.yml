@@ -41,12 +41,12 @@ jobs:
         id: setup_pnpm
         uses: pnpm/action-setup@v6
         with:
-          version: 12.0.0
+          version: 12.7.0
       - name: Setup Node.js
         id: setup_node_js
         uses: actions/setup-node@v7
         with:
-          node-version: 24.20.0
+          node-version: 24.21.0
           package-manager-cache: false
       - name: Install dependencies
         id: install_dependencies
@@ -91,7 +91,7 @@ jobs:
     steps:
       - uses: actions/setup-node@v7
         with:
-          node-version: 24.20.0
+          node-version: 24.21.0
           package-manager-cache: false
       - name: Download build artifacts
         id: download_build_artifacts
@@ -111,11 +111,6 @@ jobs:
           CHANGELOG_FILE: dist/changelog.md
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |-
-          errout=$(mktemp)
-          tag=$(cat "$RELEASE_TAG_FILE")
-          gh release create "$tag" -R "$GITHUB_REPOSITORY" -F "$CHANGELOG_FILE" -t "$tag" --target "$GITHUB_SHA" ${PRERELEASE:+-p} 2> "$errout" && true
-          exitcode=$?
-          if [ $exitcode -ne 0 ] && ! grep -q "Release.tag_name already exists" "$errout"; then
-            cat "$errout"
-            exit $exitcode
-          fi
+          tag=$(cat "$RELEASE_TAG_FILE") &&
+          gh release view "$tag" -R "$GITHUB_REPOSITORY" 2>/dev/null ||
+          gh release create "$tag" -R "$GITHUB_REPOSITORY" -F "$CHANGELOG_FILE" -t "$tag" --target "$GITHUB_SHA"

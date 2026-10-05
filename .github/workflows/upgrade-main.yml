@@ -23,12 +23,12 @@ jobs:
         id: setup_pnpm
         uses: pnpm/action-setup@v6
         with:
-          version: 12.0.0
+          version: 12.7.0
       - name: Setup Node.js
         id: setup_node_js
         uses: actions/setup-node@v7
         with:
-          node-version: 24.20.0
+          node-version: 24.21.0
           package-manager-cache: false
       - name: Install dependencies
         id: install_dependencies
