@@ -119,7 +119,7 @@ if (buildWorkflow) {
     steps: (typeof originalSteps === 'function' ? originalSteps() : originalSteps).flatMap((step) =>
       step.name === 'build'
         ? [
-            ...dockerCacheRestoreSteps(),
+            ...dockerCacheRestoreSteps('build'),
             {
               name: 'Generate and compile',
               run: 'pnpm exec projen default\npnpm exec projen pre-compile\npnpm exec projen compile',

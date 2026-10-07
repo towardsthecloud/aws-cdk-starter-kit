@@ -65,7 +65,7 @@ export function createCdkValidateWorkflow(
       },
       steps: [
         ...getCommonWorkflowSteps(nodeVersion),
-        ...dockerCacheRestoreSteps(),
+        ...dockerCacheRestoreSteps('validate'),
         ...orderedEnvironments.map((env) => ({
           id: `validate_${env}`,
           name: `Validate ${env} offline`,
@@ -465,11 +465,11 @@ function getAwsCredentialsStep(account: string, region: string, roleName: string
 }
 
 const cachePath = '${{ runner.temp }}/docker-assets';
-const cachePrefix =
-  'docker-assets-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.docker_cache_epoch.outputs.week }}-';
 
 /** Restore CDK's content-addressed bundling images; refresh mutable base images weekly. */
-export function dockerCacheRestoreSteps(): github.workflows.JobStep[] {
+export function dockerCacheRestoreSteps(scope: 'build' | 'validate'): github.workflows.JobStep[] {
+  // Build and validation can create different images; immutable cache keys must not collide.
+  const cachePrefix = `docker-assets-v1-${scope}-\${{ runner.os }}-\${{ runner.arch }}-\${{ steps.docker_cache_epoch.outputs.week }}-`;
   return [
     {
       name: 'Choose Docker cache refresh week',

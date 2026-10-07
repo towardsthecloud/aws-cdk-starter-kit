@@ -42,8 +42,8 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: ${{ runner.temp }}/docker-assets
-          key: docker-assets-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.docker_cache_epoch.outputs.week }}-${{ hashFiles('pnpm-lock.yaml', 'src/**', 'test/**') }}
-          restore-keys: docker-assets-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.docker_cache_epoch.outputs.week }}-
+          key: docker-assets-v1-build-${{ runner.os }}-${{ runner.arch }}-${{ steps.docker_cache_epoch.outputs.week }}-${{ hashFiles('pnpm-lock.yaml', 'src/**', 'test/**') }}
+          restore-keys: docker-assets-v1-build-${{ runner.os }}-${{ runner.arch }}-${{ steps.docker_cache_epoch.outputs.week }}-
       - name: Load Docker asset images
         id: load_docker_asset_images
         run: if [ -f "$RUNNER_TEMP/docker-assets/images.tar" ]; then docker load --input "$RUNNER_TEMP/docker-assets/images.tar"; fi
