@@ -28,6 +28,48 @@ jobs:
       - name: Install dependencies
         id: install_dependencies
         run: pnpm install --frozen-lockfile
-      - name: Validate CDK app against the default rule set
-        id: validate_cdk_app_against_the_default_rule_set
-        run: pnpm run validate
+      - name: Choose Docker cache refresh week
+        id: docker_cache_epoch
+        run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+      - name: Restore Docker asset images
+        id: docker_cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/docker-assets
+          key: docker-assets-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.docker_cache_epoch.outputs.week }}-${{ hashFiles('pnpm-lock.yaml', 'src/**', 'test/**') }}
+          restore-keys: docker-assets-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.docker_cache_epoch.outputs.week }}-
+      - name: Load Docker asset images
+        id: load_docker_asset_images
+        run: if [ -f "$RUNNER_TEMP/docker-assets/images.tar" ]; then docker load --input "$RUNNER_TEMP/docker-assets/images.tar"; fi
+      - name: Validate test offline
+        id: validate_test
+        run: pnpm run test:validate --no-online --output cdk.out/test
+        background: true
+      - name: Validate production offline
+        id: validate_production
+        run: pnpm run production:validate --no-online --output cdk.out/production
+        background: true
+      - name: Wait for environment validation
+        id: wait_for_environment_validation
+        wait:
+          - validate_test
+          - validate_production
+      - name: Export Docker asset images
+        id: export_docker_images
+        if: steps.docker_cache.outputs.cache-hit != 'true'
+        run: |-
+          images=()
+          while IFS= read -r image; do images+=("$image"); done < <(docker image ls --filter "reference=cdk-*" --format "{{.Repository}}:{{.Tag}}")
+          if [ "${#images[@]}" -gt 0 ]; then
+            mkdir -p "$RUNNER_TEMP/docker-assets"
+            docker save --output "$RUNNER_TEMP/docker-assets/images.tar" "${images[@]}"
+            echo "has-images=true" >> "$GITHUB_OUTPUT"
+          fi
+        shell: bash
+      - name: Save Docker asset images
+        id: save_docker_asset_images
+        if: steps.export_docker_images.outputs.has-images == 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ runner.temp }}/docker-assets
+          key: ${{ steps.docker_cache.outputs.cache-primary-key }}
