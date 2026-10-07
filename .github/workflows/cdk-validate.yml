@@ -30,24 +30,26 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Choose Docker cache refresh week
         id: docker_cache_epoch
-        run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+        run: |-
+          echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+          echo "source=$(git rev-parse "HEAD^{tree}")" >> "$GITHUB_OUTPUT"
       - name: Restore Docker asset images
         id: docker_cache
         uses: actions/cache/restore@v6
         with:
           path: ${{ runner.temp }}/docker-assets
-          key: docker-assets-v1-validate-${{ runner.os }}-${{ runner.arch }}-${{ steps.docker_cache_epoch.outputs.week }}-${{ hashFiles('pnpm-lock.yaml', 'src/**', 'test/**') }}
-          restore-keys: docker-assets-v1-validate-${{ runner.os }}-${{ runner.arch }}-${{ steps.docker_cache_epoch.outputs.week }}-
+          key: docker-assets-v2-validate-${{ runner.os }}-${{ runner.arch }}-${{ steps.docker_cache_epoch.outputs.week }}-${{ steps.docker_cache_epoch.outputs.source }}
+          restore-keys: docker-assets-v2-validate-${{ runner.os }}-${{ runner.arch }}-${{ steps.docker_cache_epoch.outputs.week }}-
       - name: Load Docker asset images
         id: load_docker_asset_images
         run: if [ -f "$RUNNER_TEMP/docker-assets/images.tar" ]; then docker load --input "$RUNNER_TEMP/docker-assets/images.tar"; fi
       - name: Validate test offline
         id: validate_test
-        run: pnpm run test:validate --no-online --output cdk.out/test
+        run: pnpm run test:validate --no-online --output "${{ runner.temp }}/cdk-assemblies/test"
         background: true
       - name: Validate production offline
         id: validate_production
-        run: pnpm run production:validate --no-online --output cdk.out/production
+        run: pnpm run production:validate --no-online --output "${{ runner.temp }}/cdk-assemblies/production"
         background: true
       - name: Wait for environment validation
         id: wait_for_environment_validation

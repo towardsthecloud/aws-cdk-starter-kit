@@ -70,7 +70,7 @@ export function createCdkValidateWorkflow(
           id: `validate_${env}`,
           name: `Validate ${env} offline`,
           background: true,
-          run: `pnpm run ${getTaskName(env, 'validate')} --no-online --output cdk.out/${env}`,
+          run: `pnpm run ${getTaskName(env, 'validate')} --no-online --output "\${{ runner.temp }}/cdk-assemblies/${env}"`,
         })),
         { name: 'Wait for environment validation', wait: orderedEnvironments.map((env) => `validate_${env}`) },
         ...dockerCacheSaveSteps(),
@@ -468,13 +468,13 @@ const cachePath = '${{ runner.temp }}/docker-assets';
 
 /** Restore CDK's content-addressed bundling images; refresh mutable base images weekly. */
 export function dockerCacheRestoreSteps(scope: 'build' | 'validate'): github.workflows.JobStep[] {
-  // Build and validation can create different images; immutable cache keys must not collide.
-  const cachePrefix = `docker-assets-v1-${scope}-\${{ runner.os }}-\${{ runner.arch }}-\${{ steps.docker_cache_epoch.outputs.week }}-`;
+  // Separate immutable keys per job; the complete checkout tree covers Docker contexts anywhere in the repository.
+  const cachePrefix = `docker-assets-v2-${scope}-\${{ runner.os }}-\${{ runner.arch }}-\${{ steps.docker_cache_epoch.outputs.week }}-`;
   return [
     {
       name: 'Choose Docker cache refresh week',
       id: 'docker_cache_epoch',
-      run: 'echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"',
+      run: 'echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"\necho "source=$(git rev-parse "HEAD^{tree}")" >> "$GITHUB_OUTPUT"',
     },
     {
       name: 'Restore Docker asset images',
@@ -482,7 +482,7 @@ export function dockerCacheRestoreSteps(scope: 'build' | 'validate'): github.wor
       uses: GITHUB_ACTIONS.cacheRestore,
       with: {
         path: cachePath,
-        key: `${cachePrefix}\${{ hashFiles('pnpm-lock.yaml', 'src/**', 'test/**') }}`,
+        key: `${cachePrefix}\${{ steps.docker_cache_epoch.outputs.source }}`,
         'restore-keys': cachePrefix,
       },
     },

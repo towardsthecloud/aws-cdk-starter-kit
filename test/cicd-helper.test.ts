@@ -1,3 +1,8 @@
+/** biome-ignore-all lint/suspicious/noTemplateCurlyInString: GitHub workflow expressions are literal test expectations */
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { awscdk, type github } from 'projen';
 import {
   createCdkDeploymentWorkflows,
@@ -16,8 +21,8 @@ test('offline validation checks each configured environment in an isolated assem
   const steps = (workflow.getJob('validate') as github.workflows.Job).steps;
   const checks = steps.filter((step) => step.background);
   expect(checks.map((step) => step.run)).toEqual([
-    'pnpm run test:validate --no-online --output cdk.out/test',
-    'pnpm run production:validate --no-online --output cdk.out/production',
+    'pnpm run test:validate --no-online --output "${{ runner.temp }}/cdk-assemblies/test"',
+    'pnpm run production:validate --no-online --output "${{ runner.temp }}/cdk-assemblies/production"',
   ]);
   expect(new Set(checks.map((step) => step.id)).size).toBe(2);
   expect(steps.find((step) => step.wait)?.wait).toEqual(checks.map((step) => step.id));
@@ -54,4 +59,34 @@ test('build and environment validation cannot overwrite each other’s immutable
   expect(validation?.key).toBeDefined();
   expect(build?.key).not.toEqual(validation?.key);
   expect(build?.['restore-keys']).not.toEqual(validation?.['restore-keys']);
+});
+
+test('changing a tracked Docker context outside src and test changes the primary cache key', () => {
+  const root = mkdtempSync(join(tmpdir(), 'cdk-cache-context-'));
+  try {
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: root, stdio: 'pipe' });
+    git('init', '--quiet');
+    mkdirSync(join(root, 'docker'));
+    const steps = dockerCacheRestoreSteps('build');
+    const epoch = steps.find((step) => step.id === 'docker_cache_epoch')?.run;
+    const primary = steps.find((step) => step.id === 'docker_cache')?.with?.key as string;
+    if (!epoch || !primary) throw new Error('Expected executable cache-key setup');
+    const keys = ['FROM scratch\n', 'FROM scratch\nLABEL changed=true\n'].map((dockerfile) => {
+      writeFileSync(join(root, 'docker/Dockerfile'), dockerfile);
+      git('add', 'docker/Dockerfile');
+      git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.com', 'commit', '--quiet', '-m', 'fixture');
+      const output = join(root, 'outputs');
+      writeFileSync(output, '');
+      execFileSync('bash', ['-e', '-c', epoch], { cwd: root, env: { ...process.env, GITHUB_OUTPUT: output } });
+      let key = primary;
+      for (const line of readFileSync(output, 'utf8').trim().split('\n')) {
+        const [name, value] = line.split('=');
+        key = key.replace(`\${{ steps.docker_cache_epoch.outputs.${name} }}`, value);
+      }
+      return key;
+    });
+    expect(keys[0]).not.toEqual(keys[1]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
