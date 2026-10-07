@@ -15,23 +15,83 @@ jobs:
       CI: "true"
     steps:
       - name: Checkout
+        id: checkout
         uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
       - name: Setup pnpm
+        id: setup_pnpm
         uses: pnpm/action-setup@v6
         with:
           version: 12.7.0
       - name: Setup Node.js
+        id: setup_node_js
         uses: actions/setup-node@v7
         with:
           node-version: 24.21.0
           package-manager-cache: false
       - name: Install dependencies
+        id: install_dependencies
         run: pnpm i --no-frozen-lockfile
-      - name: build
-        run: pnpm exec projen build
+      - name: Choose Docker cache refresh week
+        id: docker_cache_epoch
+        run: |-
+          echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+          echo "source=$(git rev-parse "HEAD^{tree}")" >> "$GITHUB_OUTPUT"
+      - name: Restore Docker asset images
+        id: docker_cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/docker-assets
+          key: docker-assets-v2-build-${{ runner.os }}-${{ runner.arch }}-${{ steps.docker_cache_epoch.outputs.week }}-${{ steps.docker_cache_epoch.outputs.source }}
+          restore-keys: docker-assets-v2-build-${{ runner.os }}-${{ runner.arch }}-${{ steps.docker_cache_epoch.outputs.week }}-
+      - name: Load Docker asset images
+        id: load_docker_asset_images
+        run: if [ -f "$RUNNER_TEMP/docker-assets/images.tar" ]; then docker load --input "$RUNNER_TEMP/docker-assets/images.tar"; fi
+      - name: Generate and compile
+        id: generate_and_compile
+        run: |-
+          pnpm exec projen default
+          pnpm exec projen pre-compile
+          pnpm exec projen compile
+      - name: Synthesize CDK app
+        id: cdk_synth
+        run: pnpm exec projen post-compile
+        background: true
+      - name: Run tests
+        id: unit_tests
+        run: pnpm exec jest --passWithNoTests --updateSnapshot --runInBand
+        background: true
+      - name: Wait for synthesis and tests
+        id: wait_for_synthesis_and_tests
+        wait:
+          - cdk_synth
+          - unit_tests
+      - name: Format and package
+        id: format_and_package
+        run: |-
+          pnpm exec projen biome
+          pnpm exec projen package
+      - name: Export Docker asset images
+        id: export_docker_images
+        if: steps.docker_cache.outputs.cache-hit != 'true'
+        run: |-
+          images=()
+          while IFS= read -r image; do images+=("$image"); done < <(docker image ls --filter "reference=cdk-*" --format "{{.Repository}}:{{.Tag}}")
+          if [ "${#images[@]}" -gt 0 ]; then
+            mkdir -p "$RUNNER_TEMP/docker-assets"
+            docker save --output "$RUNNER_TEMP/docker-assets/images.tar" "${images[@]}"
+            echo "has-images=true" >> "$GITHUB_OUTPUT"
+          fi
+        shell: bash
+      - name: Save Docker asset images
+        id: save_docker_asset_images
+        if: steps.export_docker_images.outputs.has-images == 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ runner.temp }}/docker-assets
+          key: ${{ steps.docker_cache.outputs.cache-primary-key }}
       - name: Find mutations
         id: self_mutation
         run: |-
@@ -40,6 +100,7 @@ jobs:
         shell: bash
         working-directory: ./
       - name: Upload patch
+        id: upload_patch
         if: steps.self_mutation.outputs.self_mutation_happened
         uses: actions/upload-artifact@v7
         with:
@@ -47,6 +108,7 @@ jobs:
           path: repo.patch
           overwrite: true
       - name: Fail build on mutation
+        id: fail_build_on_mutation
         if: steps.self_mutation.outputs.self_mutation_happened
         run: |-
           echo "::error::Files were changed during build (see build log). If this was triggered from a fork, you will need to update your branch."

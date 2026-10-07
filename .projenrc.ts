@@ -1,10 +1,12 @@
-import { awscdk, JsonFile, TextFile, YamlFile } from 'projen';
+import { awscdk, type github, JsonFile, TextFile, YamlFile } from 'projen';
 import { NodePackageManager } from 'projen/lib/javascript';
 import { IndentStyle, JsTrailingCommas, QuoteStyle, Semicolons } from 'projen/lib/javascript/biome/biome-config';
 import {
   createCdkDeploymentWorkflows,
   createCdkDiffPrWorkflow,
   createCdkValidateWorkflow,
+  dockerCacheRestoreSteps,
+  dockerCacheSaveSteps,
   pinGithubActions,
 } from './src/bin/cicd-helper';
 import { addCdkActionTask, type Environment, type EnvironmentConfig } from './src/bin/env-helper';
@@ -106,6 +108,38 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   ],
 });
 
+// Generate and compile before concurrent checks; run format/package only after both succeed.
+const buildWorkflow = project.buildWorkflow?.workflow;
+if (buildWorkflow) {
+  const buildJob = buildWorkflow.getJob('build') as github.workflows.Job;
+  // Projen provides a lazy list despite the declared array type.
+  const originalSteps = buildJob.steps as github.workflows.JobStep[] | (() => github.workflows.JobStep[]);
+  buildWorkflow.updateJob('build', {
+    ...buildJob,
+    steps: (typeof originalSteps === 'function' ? originalSteps() : originalSteps).flatMap((step) =>
+      step.name === 'build'
+        ? [
+            ...dockerCacheRestoreSteps('build'),
+            {
+              name: 'Generate and compile',
+              run: 'pnpm exec projen default\npnpm exec projen pre-compile\npnpm exec projen compile',
+            },
+            { id: 'cdk_synth', name: 'Synthesize CDK app', background: true, run: 'pnpm exec projen post-compile' },
+            {
+              id: 'unit_tests',
+              name: 'Run tests',
+              background: true,
+              run: 'pnpm exec jest --passWithNoTests --updateSnapshot --runInBand',
+            },
+            { name: 'Wait for synthesis and tests', wait: ['cdk_synth', 'unit_tests'] },
+            { name: 'Format and package', run: 'pnpm exec projen biome\npnpm exec projen package' },
+            ...dockerCacheSaveSteps(),
+          ]
+        : [step],
+    ),
+  });
+}
+
 // Add a lint task as an alias for the biome task
 project.addTask('lint', {
   description: 'Lint and auto-fix the codebase using Biome',
@@ -128,7 +162,14 @@ new TextFile(project, '.nvmrc', {
 // Ignore shellcheck info findings in the workflows projen generates, so actionlint passes
 new YamlFile(project, '.github/actionlint.yaml', {
   obj: {
+    // Temporary until actionlint supports background/wait steps (rhysd/actionlint#693).
     paths: {
+      '.github/workflows/{build,cdk-validate,cdk-deploy-*,cdk-destroy-*,cdk-diff-pr-comment}.yml': {
+        ignore: [
+          '^step must run script with "run" section or run action with "uses" section$',
+          '^unexpected key "background" for step to (run shell command|execute action)\\. expected one of .+$',
+        ],
+      },
       '.github/workflows/{build,release,upgrade-main}.yml': {
         ignore: ['shellcheck reported issue in this script: SC(2086|2015):info:.+'],
       },
@@ -173,7 +214,7 @@ if (project.github) {
   pinGithubActions(project.github);
 
   // Validate the CDK app offline on every pull request (no AWS credentials required)
-  createCdkValidateWorkflow(project.github, nodeVersion);
+  createCdkValidateWorkflow(project.github, nodeVersion, orderedEnvironments);
 
   for (const config of environmentConfigs) {
     // Adds customized 'npm run' commands for executing cdk synth, test, deploy and diff for each environment

@@ -34,9 +34,14 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::987654321012:role/GitHubActionsServiceRole
           aws-region: us-east-1
+        background: true
       - name: Install dependencies
         id: install_dependencies
         run: pnpm install --frozen-lockfile
+      - name: Wait for AWS authentication
+        id: wait_for_aws_authentication
+        wait:
+          - configure_aws_credentials
       - name: Destroy Branch Stack
         id: destroy_branch_stack
         env:

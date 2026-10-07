@@ -6,6 +6,8 @@ const COMMON_RUNS_ON = ['ubuntu-latest'];
 /** Pinned GitHub Actions used by every workflow in this repo. */
 export const GITHUB_ACTIONS = {
   checkout: 'actions/checkout@v7',
+  cacheRestore: 'actions/cache/restore@v6',
+  cacheSave: 'actions/cache/save@v6',
   setupNode: 'actions/setup-node@v7',
   setupPnpm: 'pnpm/action-setup@v6',
   configureAwsCredentials: 'aws-actions/configure-aws-credentials@v6',
@@ -35,14 +37,18 @@ const COMMON_WORKFLOW_PERMISSIONS = {
 /**
  * Creates a GitHub workflow that validates the CDK app offline on pull requests.
  *
- * Runs the root `validate` task (`cdk validate --no-online`) so pull requests are checked
+ * Runs each configured environment’s validation with an isolated output directory so pull requests are checked
  * against the default rule set without AWS credentials.
  *
  * @param gh - An instance of the `github.GitHub` class, used to create the GitHub workflow.
  * @param nodeVersion - The version of Node.js to be used.
  * @returns The created `github.GithubWorkflow` instance.
  */
-export function createCdkValidateWorkflow(gh: github.GitHub, nodeVersion: string): github.GithubWorkflow {
+export function createCdkValidateWorkflow(
+  gh: github.GitHub,
+  nodeVersion: string,
+  orderedEnvironments: string[],
+): github.GithubWorkflow {
   const workflow = new github.GithubWorkflow(gh, 'cdk-validate');
 
   workflow.on({
@@ -59,10 +65,15 @@ export function createCdkValidateWorkflow(gh: github.GitHub, nodeVersion: string
       },
       steps: [
         ...getCommonWorkflowSteps(nodeVersion),
-        {
-          name: 'Validate CDK app against the default rule set',
-          run: 'pnpm run validate',
-        },
+        ...dockerCacheRestoreSteps('validate'),
+        ...orderedEnvironments.map((env) => ({
+          id: `validate_${env}`,
+          name: `Validate ${env} offline`,
+          background: true,
+          run: `pnpm run ${getTaskName(env, 'validate')} --no-online --output "\${{ runner.temp }}/cdk-assemblies/${env}"`,
+        })),
+        { name: 'Wait for environment validation', wait: orderedEnvironments.map((env) => `validate_${env}`) },
+        ...dockerCacheSaveSteps(),
       ],
     },
   });
@@ -410,18 +421,27 @@ function getCommonWorkflowSteps(
   region?: string,
   githubDeployRole?: string,
   checkoutRef?: string,
-): github.workflows.Step[] {
-  const steps: github.workflows.Step[] = [
+): github.workflows.JobStep[] {
+  const steps: github.workflows.JobStep[] = [
     getCheckoutStep(checkoutRef),
     getSetupPnpmStep(),
     getSetupNodeStep(nodeVersion),
   ];
 
   if (githubDeployRole && region && account) {
-    steps.push(getAwsCredentialsStep(account, region, githubDeployRole));
+    // Authentication and package installation are independent; wait before CDK commands.
+    steps.push(
+      {
+        ...getAwsCredentialsStep(account, region, githubDeployRole),
+        id: 'configure_aws_credentials',
+        background: true,
+      },
+      getInstallDepsStep(),
+      { name: 'Wait for AWS authentication', wait: ['configure_aws_credentials'] },
+    );
+  } else {
+    steps.push(getInstallDepsStep());
   }
-
-  steps.push(getInstallDepsStep());
 
   return steps;
 }
@@ -442,4 +462,60 @@ function getAwsCredentialsStep(account: string, region: string, roleName: string
       'aws-region': region,
     },
   };
+}
+
+const cachePath = '${{ runner.temp }}/docker-assets';
+
+/** Restore CDK's content-addressed bundling images; refresh mutable base images weekly. */
+export function dockerCacheRestoreSteps(scope: 'build' | 'validate'): github.workflows.JobStep[] {
+  // Separate immutable keys per job; the complete checkout tree covers Docker contexts anywhere in the repository.
+  const cachePrefix = `docker-assets-v2-${scope}-\${{ runner.os }}-\${{ runner.arch }}-\${{ steps.docker_cache_epoch.outputs.week }}-`;
+  return [
+    {
+      name: 'Choose Docker cache refresh week',
+      id: 'docker_cache_epoch',
+      run: 'echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"\necho "source=$(git rev-parse "HEAD^{tree}")" >> "$GITHUB_OUTPUT"',
+    },
+    {
+      name: 'Restore Docker asset images',
+      id: 'docker_cache',
+      uses: GITHUB_ACTIONS.cacheRestore,
+      with: {
+        path: cachePath,
+        key: `${cachePrefix}\${{ steps.docker_cache_epoch.outputs.source }}`,
+        'restore-keys': cachePrefix,
+      },
+    },
+    {
+      name: 'Load Docker asset images',
+      run: 'if [ -f "$RUNNER_TEMP/docker-assets/images.tar" ]; then docker load --input "$RUNNER_TEMP/docker-assets/images.tar"; fi',
+    },
+  ];
+}
+
+/** Empty starter apps have no Docker images, so avoid creating or uploading an empty archive. */
+export function dockerCacheSaveSteps(): github.workflows.JobStep[] {
+  return [
+    {
+      name: 'Export Docker asset images',
+      id: 'export_docker_images',
+      if: "steps.docker_cache.outputs.cache-hit != 'true'",
+      shell: 'bash',
+      run: [
+        'images=()',
+        'while IFS= read -r image; do images+=("$image"); done < <(docker image ls --filter "reference=cdk-*" --format "{{.Repository}}:{{.Tag}}")',
+        'if [ "${#images[@]}" -gt 0 ]; then',
+        '  mkdir -p "$RUNNER_TEMP/docker-assets"',
+        '  docker save --output "$RUNNER_TEMP/docker-assets/images.tar" "${images[@]}"',
+        '  echo "has-images=true" >> "$GITHUB_OUTPUT"',
+        'fi',
+      ].join('\n'),
+    },
+    {
+      name: 'Save Docker asset images',
+      if: "steps.export_docker_images.outputs.has-images == 'true'",
+      uses: GITHUB_ACTIONS.cacheSave,
+      with: { path: cachePath, key: '${{ steps.docker_cache.outputs.cache-primary-key }}' },
+    },
+  ];
 }
