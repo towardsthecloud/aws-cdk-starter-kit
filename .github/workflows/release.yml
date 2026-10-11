@@ -81,7 +81,6 @@ jobs:
           name: build-artifact
           path: dist
           overwrite: true
-          retention-days: 1
   release_github:
     name: Publish to GitHub Releases
     needs: release

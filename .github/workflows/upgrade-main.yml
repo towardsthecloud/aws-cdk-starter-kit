@@ -51,7 +51,6 @@ jobs:
           name: repo.patch
           path: repo.patch
           overwrite: true
-          retention-days: 1
   pr:
     name: Create Pull Request
     needs: upgrade

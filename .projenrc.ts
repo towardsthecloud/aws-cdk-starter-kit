@@ -1,4 +1,4 @@
-import { awscdk, Component, type github, JsonFile, TextFile, YamlFile } from 'projen';
+import { awscdk, type github, JsonFile, TextFile, YamlFile } from 'projen';
 import { NodePackageManager } from 'projen/lib/javascript';
 import { IndentStyle, JsTrailingCommas, QuoteStyle, Semicolons } from 'projen/lib/javascript/biome/biome-config';
 import {
@@ -259,28 +259,5 @@ if (project.github) {
     orderedEnvironments,
   );
 }
-
-// Release jobs are created during preSynthesize; configure their handoffs after that.
-class ArtifactRetention extends Component {
-  preSynthesize() {
-    for (const workflowName of ['build', 'release', 'upgrade-main']) {
-      const workflow = project.github?.tryFindWorkflow(workflowName);
-      if (!workflow) continue;
-      for (const [jobId, job] of Object.entries(workflow.jobs)) {
-        if (!('steps' in job)) continue;
-        const steps = job.steps as github.workflows.JobStep[] | (() => github.workflows.JobStep[]);
-        workflow.updateJob(jobId, {
-          ...job,
-          steps: (typeof steps === 'function' ? steps() : steps).map((step) =>
-            step.id === 'upload_patch' || step.id === 'upload_artifact'
-              ? { ...step, with: { ...step.with, 'retention-days': 1 } }
-              : step,
-          ),
-        });
-      }
-    }
-  }
-}
-new ArtifactRetention(project);
 
 project.synth();
