@@ -12,7 +12,6 @@
 /.github/workflows/cdk-destroy-test-branch.yml linguist-generated
 /.github/workflows/cdk-diff-pr-comment.yml linguist-generated
 /.github/workflows/cdk-validate.yml linguist-generated
-/.github/workflows/pull-request-lint.yml linguist-generated
 /.github/workflows/release.yml linguist-generated
 /.github/workflows/upgrade-main.yml linguist-generated
 /.gitignore linguist-generated
