@@ -14,13 +14,12 @@ export const GITHUB_ACTIONS = {
   cdkDiffPrCommenter: 'towardsthecloud/aws-cdk-diff-pr-commenter@v1',
   createPullRequest: 'peter-evans/create-pull-request@v8',
   downloadArtifact: 'actions/download-artifact@v8',
-  semanticPullRequest: 'amannn/action-semantic-pull-request@v6',
   uploadArtifact: 'actions/upload-artifact@v7',
 } as const;
 
 /**
  * Registers `GITHUB_ACTIONS` with projen's actions provider so projen-managed workflows
- * (build, release, upgrade, pull-request-lint) render the same versions as the workflows built here.
+ * (build, release, upgrade) render the same versions as the workflows built here.
  */
 export function pinGithubActions(gh: github.GitHub): void {
   for (const action of Object.values(GITHUB_ACTIONS)) {

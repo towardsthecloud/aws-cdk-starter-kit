@@ -66,6 +66,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   },
   githubOptions: {
     mergify: false,
+    pullRequestLint: false,
   },
   biome: true,
   biomeOptions: {
