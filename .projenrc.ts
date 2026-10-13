@@ -140,7 +140,7 @@ if (buildWorkflow) {
   });
 }
 
-// Expire hand-off artifacts after one day: short-lived uploads free the shared GitHub artifact storage quota.
+// Expire hand-off artifacts after one day so they free the shared GitHub artifact storage quota, and don't fail the producing job when that quota is full.
 for (const [workflowName, jobId, stepId] of [
   ['build', 'build', 'upload_patch'],
   ['upgrade-main', 'upgrade', 'upload_patch'],
@@ -148,7 +148,10 @@ for (const [workflowName, jobId, stepId] of [
 ] as const) {
   const workflow = project.github?.tryFindWorkflow(workflowName);
   const uploadStep = workflow?.getStep(jobId, stepId);
-  workflow?.patchStep(jobId, stepId, { with: { ...uploadStep?.with, 'retention-days': 1 } });
+  workflow?.patchStep(jobId, stepId, {
+    continueOnError: true,
+    with: { ...uploadStep?.with, 'retention-days': 1 },
+  });
 }
 
 // Add a lint task as an alias for the biome task

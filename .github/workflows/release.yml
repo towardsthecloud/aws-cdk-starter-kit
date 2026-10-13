@@ -82,6 +82,7 @@ jobs:
           path: dist
           overwrite: true
           retention-days: 1
+        continue-on-error: true
   release_github:
     name: Publish to GitHub Releases
     needs: release

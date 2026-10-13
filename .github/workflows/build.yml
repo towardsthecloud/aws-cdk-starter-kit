@@ -108,6 +108,7 @@ jobs:
           path: repo.patch
           overwrite: true
           retention-days: 1
+        continue-on-error: true
       - name: Fail build on mutation
         id: fail_build_on_mutation
         if: steps.self_mutation.outputs.self_mutation_happened
