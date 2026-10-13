@@ -140,6 +140,17 @@ if (buildWorkflow) {
   });
 }
 
+// Expire hand-off artifacts after one day: short-lived uploads free the shared GitHub artifact storage quota.
+for (const [workflowName, jobId, stepId] of [
+  ['build', 'build', 'upload_patch'],
+  ['upgrade-main', 'upgrade', 'upload_patch'],
+  ['release', 'release', 'upload_artifact'],
+] as const) {
+  const workflow = project.github?.tryFindWorkflow(workflowName);
+  const uploadStep = workflow?.getStep(jobId, stepId);
+  workflow?.patchStep(jobId, stepId, { with: { ...uploadStep?.with, 'retention-days': 1 } });
+}
+
 // Add a lint task as an alias for the biome task
 project.addTask('lint', {
   description: 'Lint and auto-fix the codebase using Biome',
