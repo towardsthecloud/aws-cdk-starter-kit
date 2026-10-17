@@ -18,7 +18,7 @@ Production-ready AWS CDK TypeScript starter kit with secure OIDC authentication,
 - **🤖 Automated CI/CD**: Out-of-the-box GitHub Actions workflows with multi-account support for enterprise-ready deployments
 - **💬 Automated CDK Diff on PRs**: [CDK diff outputs](https://github.com/marketplace/actions/aws-cdk-diff-pr-commenter) are automatically posted to your pull requests for easy infrastructure change reviews
 - **💻 Branch-based Deployments**: Deploy multiple CDK stacks to the same AWS environments based on Git branch for an improved multi-developer workflow. Ephemeral environment deploys and destroys use CDK express mode, so they can run [up to 4x faster than normal deploys](https://aws.amazon.com/about-aws/whats-new/2026/06/aws-cloudformation-cdk/). Enable **"Automatically delete head branches"** in your repo settings so merged branch stacks are cleaned up automatically via the destroy workflow
-- **📦 Automated Dependency Management**: projen's `depsUpgrade` workflow opens dependency upgrade PRs, with Mergify handling approved PRs after passing checks
+- **📦 Manual Dependency Upgrades**: Run `pnpm run upgrade` to update dependencies through Projen; scheduled dependency-upgrade PRs are disabled
 
 <!-- TIP-LIST:START -->
 > [!TIP]
@@ -75,7 +75,7 @@ This project requires at least **Node.js version 22**.
 
 4. Run `npx projen` to generate the GitHub Actions workflow files.
 
-   The generated dependency upgrade workflow's "Create Pull Request" step uses [`PROJEN_GITHUB_TOKEN`](https://projen.io/docs/integrations/github/), so add that repository secret if you want scheduled projen dependency update PRs.
+   Dependency upgrades run manually with `pnpm run upgrade`; no `PROJEN_GITHUB_TOKEN` secret is needed for them.
 
 5. Ensure you're logged into an AWS Account via the AWS CLI.
 
