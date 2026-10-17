@@ -5,6 +5,6 @@ paths:
     ignore:
       - ^step must run script with "run" section or run action with "uses" section$
       - ^unexpected key "background" for step to (run shell command|execute action)\. expected one of .+$
-  .github/workflows/{build,release,upgrade-main}.yml:
+  .github/workflows/{build,release}.yml:
     ignore:
       - "shellcheck reported issue in this script: SC(2086|2015):info:.+"

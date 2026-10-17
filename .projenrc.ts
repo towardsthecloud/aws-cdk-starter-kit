@@ -42,6 +42,7 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   cdkCliVersion: '2.1143.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk
   cdkVersion: '2.271.0', // Find the latest CDK version here: https://www.npmjs.com/package/aws-cdk-lib
   projenVersion: '0.103.27', // Find the latest projen version here: https://www.npmjs.com/package/projen
+  depsUpgradeOptions: { workflow: false },
   defaultReleaseBranch: 'main',
   packageManager: NodePackageManager.PNPM,
   pnpmVersion: '12.7.0', // Find the latest pnpm version here: https://www.npmjs.com/package/pnpm
@@ -171,7 +172,7 @@ new YamlFile(project, '.github/actionlint.yaml', {
           '^unexpected key "background" for step to (run shell command|execute action)\\. expected one of .+$',
         ],
       },
-      '.github/workflows/{build,release,upgrade-main}.yml': {
+      '.github/workflows/{build,release}.yml': {
         ignore: ['shellcheck reported issue in this script: SC(2086|2015):info:.+'],
       },
     },
