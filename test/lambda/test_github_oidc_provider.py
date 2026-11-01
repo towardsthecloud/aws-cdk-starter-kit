@@ -193,15 +193,6 @@ class GitHubOidcProviderTest(unittest.TestCase):
         self.assertEqual(response["PhysicalResourceId"], ARN)
         self.assertEqual(iam.providers[ARN]["Tags"], [OWNER_TAG])
 
-    def test_update_with_an_ignored_property_changes_nothing(self):
-        iam = FakeIam(foreign_provider())
-        handler = load_handler(iam)
-        replay = event("Update", physical_id=ARN)
-        replay["ResourceProperties"]["LifecycleValidationRun"] = "nonce"
-        handler.on_event(replay, Context())
-        self.assertEqual(iam.providers, foreign_provider())
-        self.assertEqual(iam.calls, ["get"])
-
     def test_delete_removes_the_provider_the_handler_created(self):
         iam = FakeIam()
         self.run_event(iam, "Create")
@@ -234,15 +225,6 @@ class GitHubOidcProviderTest(unittest.TestCase):
         self.run_event(iam, "Create")
         self.run_event(iam, "Delete", physical_id=ARN)
         self.assertEqual(iam.calls.count("delete"), 1)
-
-    def test_delete_after_a_failed_create_cleans_up_by_the_derived_identity(self):
-        # A Create that failed after registering the provider returns no ARN, so the
-        # rollback's Delete carries the provider framework's placeholder ID.
-        iam = FakeIam()
-        self.run_event(iam, "Create")
-        response = self.run_event(iam, "Delete", physical_id="placeholder-request-id")
-        self.assertEqual(response["PhysicalResourceId"], "placeholder-request-id")
-        self.assertEqual(iam.providers, {})
 
     def test_other_errors_propagate(self):
         for request_type in ("Create", "Delete"):

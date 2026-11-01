@@ -131,7 +131,7 @@ if (buildWorkflow) {
               id: 'unit_tests',
               name: 'Run tests',
               background: true,
-              run: 'pnpm exec jest --passWithNoTests --updateSnapshot --runInBand',
+              run: 'pnpm exec jest --passWithNoTests --updateSnapshot --runInBand\npython3 -B -m unittest discover -s test/lambda',
             },
             { name: 'Wait for synthesis and tests', wait: ['cdk_synth', 'unit_tests'] },
             { name: 'Format and package', run: 'pnpm exec projen biome\npnpm exec projen package' },
@@ -150,7 +150,7 @@ project.addTask('lint', {
 });
 
 // Run the Python Lambda handler tests with the Jest suite; they need only the standard library.
-project.testTask.exec('python3 -B -m unittest discover -s test/lambda -p "test_*.py"');
+project.testTask.exec('python3 -B -m unittest discover -s test/lambda');
 
 // Run comprehensive CDK validation locally without requiring AWS credentials.
 project.addTask('validate', {

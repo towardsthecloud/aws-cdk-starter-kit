@@ -12,6 +12,7 @@ import {
 } from '../bin/git-helper';
 
 const GITHUB_DOMAIN = 'token.actions.githubusercontent.com';
+const GITHUB_AUDIENCE = 'sts.amazonaws.com';
 const DEFAULT_ROLE_NAME = 'GitHubActionsServiceRole';
 
 /**
@@ -98,7 +99,12 @@ export class GitHubActionsOidcConstruct extends Construct {
     });
     const providerResource = this.createProviderResource(providerArn);
     providerResource.applyRemovalPolicy(providerRemovalPolicy);
-    this.provider = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(this, 'GithubProvider', providerArn);
+    // The custom resource returns the provider ARN, so the role that trusts it waits for the provider.
+    this.provider = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
+      this,
+      'GithubProvider',
+      providerResource.ref,
+    );
 
     const context = `environment:${props.environment}`;
     const subjects = [
@@ -112,7 +118,7 @@ export class GitHubActionsOidcConstruct extends Construct {
         [`${GITHUB_DOMAIN}:sub`]: subjects,
       },
       StringEquals: {
-        [`${GITHUB_DOMAIN}:aud`]: 'sts.amazonaws.com',
+        [`${GITHUB_DOMAIN}:aud`]: GITHUB_AUDIENCE,
       },
     };
 
@@ -123,7 +129,14 @@ export class GitHubActionsOidcConstruct extends Construct {
       maxSessionDuration: props.maxSessionDuration ?? cdk.Duration.hours(2),
       roleName: props.roleName ?? process.env.GITHUB_DEPLOY_ROLE ?? DEFAULT_ROLE_NAME,
     });
-    this.role.node.addDependency(providerResource);
+  }
+
+  /** A log group that the stack deletes, so no function logs to Lambda's implicit one, which outlives the stack. */
+  private createLogGroup(id: string): logs.LogGroup {
+    return new logs.LogGroup(this, id, {
+      retention: logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
   }
 
   /** The custom resource that creates the account's GitHub provider or adopts the one it has. */
@@ -135,10 +148,7 @@ export class GitHubActionsOidcConstruct extends Construct {
       code: lambda.Code.fromAsset(path.join(__dirname, '..', 'assets', 'lambda', 'github-oidc-provider')),
       description: "Creates or adopts the account's GitHub Actions OIDC provider",
       timeout: cdk.Duration.minutes(1),
-      logGroup: new logs.LogGroup(this, 'ProviderHandlerLogs', {
-        retention: logs.RetentionDays.ONE_MONTH,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      }),
+      logGroup: this.createLogGroup('ProviderHandlerLogs'),
     });
     handler.addToRolePolicy(
       new iam.PolicyStatement({
@@ -154,17 +164,14 @@ export class GitHubActionsOidcConstruct extends Construct {
     );
     const provider = new cr.Provider(this, 'ProviderFramework', {
       onEventHandler: handler,
-      logGroup: new logs.LogGroup(this, 'ProviderFrameworkLogs', {
-        retention: logs.RetentionDays.ONE_MONTH,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      }),
+      logGroup: this.createLogGroup('ProviderFrameworkLogs'),
     });
     return new cdk.CustomResource(this, 'Provider', {
       serviceToken: provider.serviceToken,
       resourceType: 'Custom::GitHubOidcProvider',
       properties: {
         url: `https://${GITHUB_DOMAIN}`,
-        clientIds: ['sts.amazonaws.com'],
+        clientIds: [GITHUB_AUDIENCE],
       },
     });
   }

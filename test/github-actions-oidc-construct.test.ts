@@ -33,11 +33,6 @@ test('GitHubActionsOidcConstruct creates default GitHub OIDC provider and deploy
     DeletionPolicy: 'Retain',
   });
   const [provider] = Object.keys(template.findResources('Custom::GitHubOidcProvider'));
-  template.hasResource('AWS::IAM::Role', {
-    Properties: { RoleName: 'GitHubActionsServiceRole' },
-    // The role waits for the provider it trusts.
-    DependsOn: Match.arrayWith([provider]),
-  });
   template.hasResourceProperties('AWS::IAM::Role', {
     RoleName: 'GitHubActionsServiceRole',
     MaxSessionDuration: 7200,
@@ -46,18 +41,7 @@ test('GitHubActionsOidcConstruct creates default GitHub OIDC provider and deploy
         Match.objectLike({
           Action: 'sts:AssumeRoleWithWebIdentity',
           Principal: {
-            Federated: {
-              'Fn::Join': [
-                '',
-                [
-                  'arn:',
-                  { Ref: 'AWS::Partition' },
-                  ':iam::',
-                  { Ref: 'AWS::AccountId' },
-                  ':oidc-provider/token.actions.githubusercontent.com',
-                ],
-              ],
-            },
+            Federated: { Ref: provider },
           },
           Condition: {
             StringEquals: {

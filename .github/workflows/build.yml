@@ -61,7 +61,9 @@ jobs:
         background: true
       - name: Run tests
         id: unit_tests
-        run: pnpm exec jest --passWithNoTests --updateSnapshot --runInBand
+        run: |-
+          pnpm exec jest --passWithNoTests --updateSnapshot --runInBand
+          python3 -B -m unittest discover -s test/lambda
         background: true
       - name: Wait for synthesis and tests
         id: wait_for_synthesis_and_tests
