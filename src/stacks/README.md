@@ -69,14 +69,38 @@ The `FoundationStack` sets up fundamental infrastructure components for AWS depl
 
 ### Features
 
-- GitHub Actions OIDC Provider: Sets up the OIDC provider for GitHub Actions within the AWS account.
+- GitHub Actions OIDC Provider: Sets up the OIDC provider for GitHub Actions within the AWS account, or adopts the one the account already has, for example from a landing zone. See [Existing GitHub OIDC providers](#existing-github-oidc-providers).
 - GitHub Deploy Role: Creates an IAM role with AdministratorAccess managed policy, assumable by GitHub Actions workflows.
 - CDK Toolkit Cleaner: Implements a ToolkitCleaner for managing CDK toolkit resources.
 
 ### Properties
 
 - `environment`: Required. Specifies the deployment stage (e.g., `dev`, `test`, `staging`, `production`).
-- `githubActionsOidc`: Optional. Tunes the deploy role: `additionalRepositories`, `maxSessionDuration`, and `roleName`.
+- `githubActionsOidc`: Optional. Tunes the deploy role: `additionalRepositories`, `maxSessionDuration`, `roleName`, and `providerRemovalPolicy`.
+
+### Existing GitHub OIDC providers
+
+IAM allows one GitHub OIDC provider per AWS account, so a second stack that creates it fails with
+`EntityAlreadyExists`. The `FoundationStack` registers the provider through a custom resource instead: when the
+account already has one, from a landing zone, another stack, or a manual setup, it adopts that provider and adds the
+`sts.amazonaws.com` audience if it is missing. It creates the provider only when the account has none and tags it
+`aws-cdk-starter-kit:github-oidc-provider=created`.
+
+Deleting the stack never deletes an adopted provider. A provider the stack created stays too, unless you set
+`githubActionsOidc.providerRemovalPolicy` to `cdk.RemovalPolicy.DESTROY`; a later deployment adopts the retained one.
+
+#### Upgrading a FoundationStack deployed with the earlier provider
+
+Earlier versions created the provider with CDK's `iam.OpenIdConnectProvider`, which deletes it when it leaves the
+template. Upgrading straight to this version would adopt the provider and then delete it in the same deployment, which
+locks GitHub Actions out of the deploy role. Retain it first, with the earlier version of
+`github-actions-oidc-construct.ts`:
+
+```ts
+(this.provider.node.defaultChild as cdk.CustomResource).applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
+```
+
+Deploy the `FoundationStack` once with that line, then upgrade and deploy again.
 
 ### GitHub immutable OIDC subjects
 

@@ -149,6 +149,9 @@ project.addTask('lint', {
   receiveArgs: true,
 });
 
+// Run the Python Lambda handler tests with the Jest suite; they need only the standard library.
+project.testTask.exec('python3 -B -m unittest discover -s test/lambda -p "test_*.py"');
+
 // Run comprehensive CDK validation locally without requiring AWS credentials.
 project.addTask('validate', {
   description: 'Validate the CDK app offline against the comprehensive default rule set',

@@ -25,9 +25,18 @@ test('GitHubActionsOidcConstruct creates default GitHub OIDC provider and deploy
   });
 
   const template = Template.fromStack(stack);
-  template.hasResourceProperties('Custom::AWSCDKOpenIdConnectProvider', {
-    Url: 'https://token.actions.githubusercontent.com',
-    ClientIDList: ['sts.amazonaws.com'],
+  template.hasResource('Custom::GitHubOidcProvider', {
+    Properties: {
+      url: 'https://token.actions.githubusercontent.com',
+      clientIds: ['sts.amazonaws.com'],
+    },
+    DeletionPolicy: 'Retain',
+  });
+  const [provider] = Object.keys(template.findResources('Custom::GitHubOidcProvider'));
+  template.hasResource('AWS::IAM::Role', {
+    Properties: { RoleName: 'GitHubActionsServiceRole' },
+    // The role waits for the provider it trusts.
+    DependsOn: Match.arrayWith([provider]),
   });
   template.hasResourceProperties('AWS::IAM::Role', {
     RoleName: 'GitHubActionsServiceRole',
@@ -36,6 +45,20 @@ test('GitHubActionsOidcConstruct creates default GitHub OIDC provider and deploy
       Statement: [
         Match.objectLike({
           Action: 'sts:AssumeRoleWithWebIdentity',
+          Principal: {
+            Federated: {
+              'Fn::Join': [
+                '',
+                [
+                  'arn:',
+                  { Ref: 'AWS::Partition' },
+                  ':iam::',
+                  { Ref: 'AWS::AccountId' },
+                  ':oidc-provider/token.actions.githubusercontent.com',
+                ],
+              ],
+            },
+          },
           Condition: {
             StringEquals: {
               'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
@@ -103,4 +126,61 @@ test('GitHubActionsOidcConstruct rejects an additional repository without a nume
         additionalRepositories: [{ name: 'example-cdk-app', id: '*' }],
       }),
   ).toThrow('GitHub repository identity requires a decimal id');
+});
+
+test('GitHubActionsOidcConstruct deletes only a provider it created, and only on request', () => {
+  const stack = new cdk.Stack();
+
+  new GitHubActionsOidcConstruct(stack, 'GitHubActionsOidc', {
+    environment: 'test',
+    providerRemovalPolicy: cdk.RemovalPolicy.DESTROY,
+  });
+
+  Template.fromStack(stack).hasResource('Custom::GitHubOidcProvider', { DeletionPolicy: 'Delete' });
+});
+
+test('GitHubActionsOidcConstruct rejects provider removal policies other than RETAIN and DESTROY', () => {
+  const stack = new cdk.Stack();
+
+  new GitHubActionsOidcConstruct(stack, 'GitHubActionsOidc', {
+    environment: 'test',
+    providerRemovalPolicy: cdk.RemovalPolicy.SNAPSHOT,
+  });
+
+  expect(() => Template.fromStack(stack)).toThrow(/providerRemovalPolicy must be either RETAIN or DESTROY/);
+});
+
+test('GitHubActionsOidcConstruct lets its handler change only the GitHub provider of its own account', () => {
+  const stack = new cdk.Stack();
+
+  new GitHubActionsOidcConstruct(stack, 'GitHubActionsOidc', { environment: 'test' });
+
+  Template.fromStack(stack).hasResourceProperties('AWS::IAM::Policy', {
+    PolicyDocument: {
+      Statement: Match.arrayWith([
+        {
+          Effect: 'Allow',
+          Action: [
+            'iam:AddClientIDToOpenIDConnectProvider',
+            'iam:CreateOpenIDConnectProvider',
+            'iam:DeleteOpenIDConnectProvider',
+            'iam:GetOpenIDConnectProvider',
+            'iam:TagOpenIDConnectProvider',
+          ],
+          Resource: {
+            'Fn::Join': [
+              '',
+              [
+                'arn:',
+                { Ref: 'AWS::Partition' },
+                ':iam::',
+                { Ref: 'AWS::AccountId' },
+                ':oidc-provider/token.actions.githubusercontent.com',
+              ],
+            ],
+          },
+        },
+      ]),
+    },
+  });
 });

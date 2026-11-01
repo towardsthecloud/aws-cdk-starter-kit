@@ -62,7 +62,7 @@ export interface FoundationStackProps extends cdk.StackProps {
  * @extends cdk.Stack
  *
  * @remarks
- * - Creates a GitHub OIDC provider
+ * - Creates a GitHub OIDC provider, or adopts the one the account already has
  * - Sets up an IAM role for GitHub Actions with necessary permissions
  * - Implements a ToolkitCleaner for managing CDK toolkit resources
  *

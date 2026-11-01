@@ -472,6 +472,9 @@
         },
         {
           "spawn": "biome"
+        },
+        {
+          "exec": "python3 -B -m unittest discover -s test/lambda -p \"test_*.py\""
         }
       ]
     },
