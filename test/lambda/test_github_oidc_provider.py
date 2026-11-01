@@ -226,6 +226,15 @@ class GitHubOidcProviderTest(unittest.TestCase):
         self.run_event(iam, "Delete", physical_id=ARN)
         self.assertEqual(iam.calls.count("delete"), 1)
 
+    def test_delete_after_a_failed_create_cleans_up_by_the_derived_identity(self):
+        # A Create that failed after registering the provider returns no ARN, so the
+        # rollback's Delete carries the provider framework's placeholder ID.
+        iam = FakeIam()
+        self.run_event(iam, "Create")
+        response = self.run_event(iam, "Delete", physical_id="placeholder-request-id")
+        self.assertEqual(response["PhysicalResourceId"], "placeholder-request-id")
+        self.assertEqual(iam.providers, {})
+
     def test_other_errors_propagate(self):
         for request_type in ("Create", "Delete"):
             with self.subTest(request_type=request_type):
