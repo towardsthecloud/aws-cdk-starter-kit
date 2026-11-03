@@ -5,40 +5,69 @@ declares the same provider fails with `EntityAlreadyExists`. This resource
 converges instead:
 
 - Create and Update read the provider by its ARN, which the account and the
-  issuer URL fix. When it is absent the handler creates it, tagged as created
-  here; when it exists, whoever created it, the handler adopts it and adds any
-  missing client ID. It never removes a client ID or changes a provider's tags.
-- Delete removes the provider only when it carries the created tag, so a
-  provider another stack or a person registered stays. A client ID the handler
-  added to an adopted provider stays too, since roles outside the stack may use
-  it. With the construct's default `RETAIN` removal policy CloudFormation sends
-  no Delete at all.
+  issuer URL fix. When it is absent the handler creates it; when it exists,
+  whoever created it, the handler adopts it and adds any missing client ID. It
+  never removes a client ID.
+- Delete never removes the provider or a client ID. Roles outside the stack,
+  such as a workload repository's deploy role, may trust the provider, and the
+  handler can't tell whether one still does. A provider grants nothing until a
+  role trusts it, and adding the construct back adopts it again.
 
-The physical ID is the provider ARN. Every request acts on the ARN the account
-and the fixed issuer URL derive, which is the only provider the resource can
-own, so a Delete after a Create that failed before it returned the ARN still
-finds it.
+The physical ID is the provider ARN.
 """
 
 boto3 = __import__("boto3")
+time = __import__("time")
+Config = __import__("botocore.config", fromlist=["Config"]).Config
 
-OWNER_TAG_KEY = "aws-cdk-starter-kit:github-oidc-provider"
-OWNER_TAG_VALUE = "created"
+# Kept free after the handler returns so the provider framework can respond to CloudFormation.
+RESPONSE_MARGIN_SECONDS = 30
+CONNECT_TIMEOUT_SECONDS = 5
+READ_TIMEOUT_SECONDS = 15
 
 
 def on_event(event, context):
+    if event["RequestType"] == "Delete":
+        print("Keeping the GitHub OIDC provider: roles outside the stack may trust it")
+        return {"PhysicalResourceId": event["PhysicalResourceId"]}
+
     props = event["ResourceProperties"]
     _, partition, _, _, account = context.invoked_function_arn.split(":")[:5]
     host = props["url"].removeprefix("https://")
     arn = f"arn:{partition}:iam::{account}:oidc-provider/{host}"
-    iam = boto3.client("iam")
-
-    if event["RequestType"] == "Delete":
-        delete_if_created(iam, arn)
-        return {"PhysicalResourceId": event["PhysicalResourceId"]}
-
-    ensure_provider(iam, arn, props["url"], props["clientIds"])
+    ensure_provider(bounded_iam_client(context), arn, props["url"], props["clientIds"])
     return {"PhysicalResourceId": arn}
+
+
+def bounded_iam_client(context):
+    """IAM client whose every wire attempt, retries included, ends before the invocation deadline.
+
+    Socket timeouts bound a stalled call, and the before-send guard fails an
+    attempt outright once it could no longer finish in time, so CloudFormation
+    gets a retryable failure instead of a Lambda timeout.
+    """
+    deadline = (
+        time.monotonic()
+        + context.get_remaining_time_in_millis() / 1000
+        - RESPONSE_MARGIN_SECONDS
+    )
+    client = boto3.client(
+        "iam",
+        config=Config(
+            connect_timeout=CONNECT_TIMEOUT_SECONDS,
+            read_timeout=READ_TIMEOUT_SECONDS,
+            retries={"mode": "standard", "total_max_attempts": 3},
+        ),
+    )
+
+    def before_send(**_kwargs):
+        if time.monotonic() + CONNECT_TIMEOUT_SECONDS + READ_TIMEOUT_SECONDS >= deadline:
+            raise RuntimeError(
+                "Invocation deadline reached before an IAM call could complete; redeploy to retry"
+            )
+
+    client.meta.events.register("before-send", before_send)
+    return client
 
 
 def error_code(error):
@@ -59,11 +88,7 @@ def ensure_provider(iam, arn, url, client_ids):
     provider = read_provider(iam, arn)
     if provider is None:
         try:
-            iam.create_open_id_connect_provider(
-                Url=url,
-                ClientIDList=client_ids,
-                Tags=[{"Key": OWNER_TAG_KEY, "Value": OWNER_TAG_VALUE}],
-            )
+            iam.create_open_id_connect_provider(Url=url, ClientIDList=client_ids)
             print(f"Created {arn}")
             return
         except Exception as error:
@@ -83,19 +108,3 @@ def ensure_provider(iam, arn, url, client_ids):
             )
             print(f"Added client ID {client_id} to {arn}")
 
-
-def delete_if_created(iam, arn):
-    provider = read_provider(iam, arn)
-    if provider is None:
-        print(f"{arn} is already absent")
-        return
-    tags = {tag["Key"]: tag["Value"] for tag in provider.get("Tags", [])}
-    if tags.get(OWNER_TAG_KEY) != OWNER_TAG_VALUE:
-        print(f"Keeping {arn}: this resource adopted it and did not create it")
-        return
-    try:
-        iam.delete_open_id_connect_provider(OpenIDConnectProviderArn=arn)
-    except Exception as error:
-        if error_code(error) != "NoSuchEntity":
-            raise
-    print(f"Deleted {arn}")

@@ -50,13 +50,6 @@ export interface GitHubActionsOidcConstructProps {
    * @default process.env.GITHUB_DEPLOY_ROLE ?? 'GitHubActionsServiceRole'
    */
   readonly roleName?: string;
-  /**
-   * What happens to a GitHub OIDC provider this construct created when the stack is deleted. `DESTROY` deletes it;
-   * `RETAIN` keeps it, and deploying again adopts it. A provider the construct adopted always stays.
-   *
-   * @default cdk.RemovalPolicy.RETAIN
-   */
-  readonly providerRemovalPolicy?: cdk.RemovalPolicy;
 }
 
 /**
@@ -64,8 +57,8 @@ export interface GitHubActionsOidcConstructProps {
  *
  * IAM allows one GitHub OIDC provider per account, and the account may already have one, for example from a landing
  * zone or an earlier setup. A custom resource therefore adopts an existing provider, adding the `sts.amazonaws.com`
- * audience if it is missing, and creates one only when the account has none. It deletes only a provider it created,
- * which it tags `aws-cdk-starter-kit:github-oidc-provider=created`, and only under `providerRemovalPolicy: DESTROY`.
+ * audience if it is missing, and creates one only when the account has none. Deleting the stack never deletes the
+ * provider, since roles outside the stack, such as a landing zone's, may trust it; deploying again adopts it.
  *
  * The role trusts GitHub's immutable subject claim, `repo:OWNER@OWNER-ID/REPOSITORY@REPOSITORY-ID:CONTEXT`,
  * so renaming, deleting, or transferring a repository cannot hand its trust to a different one. Repositories
@@ -84,13 +77,6 @@ export class GitHubActionsOidcConstruct extends Construct {
 
     const repository = getGitRepositoryIdentity();
 
-    const providerRemovalPolicy = props.providerRemovalPolicy ?? cdk.RemovalPolicy.RETAIN;
-    this.node.addValidation({
-      validate: () =>
-        providerRemovalPolicy === cdk.RemovalPolicy.RETAIN || providerRemovalPolicy === cdk.RemovalPolicy.DESTROY
-          ? []
-          : ['providerRemovalPolicy must be either RETAIN or DESTROY'],
-    });
     const providerArn = cdk.Stack.of(this).formatArn({
       service: 'iam',
       region: '',
@@ -98,7 +84,6 @@ export class GitHubActionsOidcConstruct extends Construct {
       resourceName: GITHUB_DOMAIN,
     });
     const providerResource = this.createProviderResource(providerArn);
-    providerResource.applyRemovalPolicy(providerRemovalPolicy);
     // The custom resource returns the provider ARN, so the role that trusts it waits for the provider.
     this.provider = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
       this,
@@ -147,7 +132,7 @@ export class GitHubActionsOidcConstruct extends Construct {
       handler: 'index.on_event',
       code: lambda.Code.fromAsset(path.join(__dirname, '..', 'assets', 'lambda', 'github-oidc-provider')),
       description: "Creates or adopts the account's GitHub Actions OIDC provider",
-      timeout: cdk.Duration.minutes(1),
+      timeout: cdk.Duration.minutes(2),
       logGroup: this.createLogGroup('ProviderHandlerLogs'),
     });
     handler.addToRolePolicy(
@@ -155,9 +140,7 @@ export class GitHubActionsOidcConstruct extends Construct {
         actions: [
           'iam:AddClientIDToOpenIDConnectProvider',
           'iam:CreateOpenIDConnectProvider',
-          'iam:DeleteOpenIDConnectProvider',
           'iam:GetOpenIDConnectProvider',
-          'iam:TagOpenIDConnectProvider',
         ],
         resources: [providerArn],
       }),

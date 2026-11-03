@@ -30,7 +30,6 @@ test('GitHubActionsOidcConstruct creates default GitHub OIDC provider and deploy
       url: 'https://token.actions.githubusercontent.com',
       clientIds: ['sts.amazonaws.com'],
     },
-    DeletionPolicy: 'Retain',
   });
   const [provider] = Object.keys(template.findResources('Custom::GitHubOidcProvider'));
   template.hasResourceProperties('AWS::IAM::Role', {
@@ -112,28 +111,6 @@ test('GitHubActionsOidcConstruct rejects an additional repository without a nume
   ).toThrow('GitHub repository identity requires a decimal id');
 });
 
-test('GitHubActionsOidcConstruct deletes only a provider it created, and only on request', () => {
-  const stack = new cdk.Stack();
-
-  new GitHubActionsOidcConstruct(stack, 'GitHubActionsOidc', {
-    environment: 'test',
-    providerRemovalPolicy: cdk.RemovalPolicy.DESTROY,
-  });
-
-  Template.fromStack(stack).hasResource('Custom::GitHubOidcProvider', { DeletionPolicy: 'Delete' });
-});
-
-test('GitHubActionsOidcConstruct rejects provider removal policies other than RETAIN and DESTROY', () => {
-  const stack = new cdk.Stack();
-
-  new GitHubActionsOidcConstruct(stack, 'GitHubActionsOidc', {
-    environment: 'test',
-    providerRemovalPolicy: cdk.RemovalPolicy.SNAPSHOT,
-  });
-
-  expect(() => Template.fromStack(stack)).toThrow(/providerRemovalPolicy must be either RETAIN or DESTROY/);
-});
-
 test('GitHubActionsOidcConstruct lets its handler change only the GitHub provider of its own account', () => {
   const stack = new cdk.Stack();
 
@@ -147,9 +124,7 @@ test('GitHubActionsOidcConstruct lets its handler change only the GitHub provide
           Action: [
             'iam:AddClientIDToOpenIDConnectProvider',
             'iam:CreateOpenIDConnectProvider',
-            'iam:DeleteOpenIDConnectProvider',
             'iam:GetOpenIDConnectProvider',
-            'iam:TagOpenIDConnectProvider',
           ],
           Resource: {
             'Fn::Join': [

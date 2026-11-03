@@ -76,18 +76,17 @@ The `FoundationStack` sets up fundamental infrastructure components for AWS depl
 ### Properties
 
 - `environment`: Required. Specifies the deployment stage (e.g., `dev`, `test`, `staging`, `production`).
-- `githubActionsOidc`: Optional. Tunes the deploy role: `additionalRepositories`, `maxSessionDuration`, `roleName`, and `providerRemovalPolicy`.
+- `githubActionsOidc`: Optional. Tunes the deploy role: `additionalRepositories`, `maxSessionDuration`, and `roleName`.
 
 ### Existing GitHub OIDC providers
 
 IAM allows one GitHub OIDC provider per AWS account, so a second stack that creates it fails with
 `EntityAlreadyExists`. The `FoundationStack` registers the provider through a custom resource instead: when the
 account already has one, from a landing zone, another stack, or a manual setup, it adopts that provider and adds the
-`sts.amazonaws.com` audience if it is missing. It creates the provider only when the account has none and tags it
-`aws-cdk-starter-kit:github-oidc-provider=created`.
+`sts.amazonaws.com` audience if it is missing. It creates the provider only when the account has none.
 
-Deleting the stack never deletes an adopted provider. A provider the stack created stays too, unless you set
-`githubActionsOidc.providerRemovalPolicy` to `cdk.RemovalPolicy.DESTROY`; a later deployment adopts the retained one.
+Deleting the stack never deletes the provider, whoever created it, because other roles in the account, such as a
+landing zone's, may trust it. A provider grants nothing until a role trusts it, and a later deployment adopts it.
 
 #### Upgrading a FoundationStack deployed with the earlier provider
 
