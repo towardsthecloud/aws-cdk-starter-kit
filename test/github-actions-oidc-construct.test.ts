@@ -25,10 +25,13 @@ test('GitHubActionsOidcConstruct creates default GitHub OIDC provider and deploy
   });
 
   const template = Template.fromStack(stack);
-  template.hasResourceProperties('Custom::AWSCDKOpenIdConnectProvider', {
-    Url: 'https://token.actions.githubusercontent.com',
-    ClientIDList: ['sts.amazonaws.com'],
+  template.hasResource('Custom::GitHubOidcProvider', {
+    Properties: {
+      url: 'https://token.actions.githubusercontent.com',
+      clientIds: ['sts.amazonaws.com'],
+    },
   });
+  const [provider] = Object.keys(template.findResources('Custom::GitHubOidcProvider'));
   template.hasResourceProperties('AWS::IAM::Role', {
     RoleName: 'GitHubActionsServiceRole',
     MaxSessionDuration: 7200,
@@ -36,6 +39,9 @@ test('GitHubActionsOidcConstruct creates default GitHub OIDC provider and deploy
       Statement: [
         Match.objectLike({
           Action: 'sts:AssumeRoleWithWebIdentity',
+          Principal: {
+            Federated: { Ref: provider },
+          },
           Condition: {
             StringEquals: {
               'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
@@ -103,4 +109,37 @@ test('GitHubActionsOidcConstruct rejects an additional repository without a nume
         additionalRepositories: [{ name: 'example-cdk-app', id: '*' }],
       }),
   ).toThrow('GitHub repository identity requires a decimal id');
+});
+
+test('GitHubActionsOidcConstruct lets its handler change only the GitHub provider of its own account', () => {
+  const stack = new cdk.Stack();
+
+  new GitHubActionsOidcConstruct(stack, 'GitHubActionsOidc', { environment: 'test' });
+
+  Template.fromStack(stack).hasResourceProperties('AWS::IAM::Policy', {
+    PolicyDocument: {
+      Statement: Match.arrayWith([
+        {
+          Effect: 'Allow',
+          Action: [
+            'iam:AddClientIDToOpenIDConnectProvider',
+            'iam:CreateOpenIDConnectProvider',
+            'iam:GetOpenIDConnectProvider',
+          ],
+          Resource: {
+            'Fn::Join': [
+              '',
+              [
+                'arn:',
+                { Ref: 'AWS::Partition' },
+                ':iam::',
+                { Ref: 'AWS::AccountId' },
+                ':oidc-provider/token.actions.githubusercontent.com',
+              ],
+            ],
+          },
+        },
+      ]),
+    },
+  });
 });

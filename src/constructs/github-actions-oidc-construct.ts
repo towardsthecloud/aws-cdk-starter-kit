@@ -1,5 +1,9 @@
+import * as path from 'node:path';
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as logs from 'aws-cdk-lib/aws-logs';
+import * as cr from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import {
   buildGitHubActionsOidcSubject,
@@ -8,6 +12,7 @@ import {
 } from '../bin/git-helper';
 
 const GITHUB_DOMAIN = 'token.actions.githubusercontent.com';
+const GITHUB_AUDIENCE = 'sts.amazonaws.com';
 const DEFAULT_ROLE_NAME = 'GitHubActionsServiceRole';
 
 /**
@@ -50,6 +55,11 @@ export interface GitHubActionsOidcConstructProps {
 /**
  * Creates a GitHub Actions OIDC provider and IAM deployment role for AWS CDK deployments.
  *
+ * IAM allows one GitHub OIDC provider per account, and the account may already have one, for example from a landing
+ * zone or an earlier setup. A custom resource therefore adopts an existing provider, adding the `sts.amazonaws.com`
+ * audience if it is missing, and creates one only when the account has none. Deleting the stack never deletes the
+ * provider, since roles outside the stack, such as a landing zone's, may trust it; deploying again adopts it.
+ *
  * The role trusts GitHub's immutable subject claim, `repo:OWNER@OWNER-ID/REPOSITORY@REPOSITORY-ID:CONTEXT`,
  * so renaming, deleting, or transferring a repository cannot hand its trust to a different one. Repositories
  * still emitting legacy subjects must be opted into immutable subjects after this role is deployed; there is
@@ -57,7 +67,7 @@ export interface GitHubActionsOidcConstructProps {
  */
 export class GitHubActionsOidcConstruct extends Construct {
   /** GitHub Actions OIDC identity provider trusted by the deployment role. */
-  public readonly provider: iam.OpenIdConnectProvider;
+  public readonly provider: iam.IOpenIdConnectProvider;
 
   /** IAM role assumed by GitHub Actions workflows to deploy AWS resources. */
   public readonly role: iam.Role;
@@ -67,10 +77,19 @@ export class GitHubActionsOidcConstruct extends Construct {
 
     const repository = getGitRepositoryIdentity();
 
-    this.provider = new iam.OpenIdConnectProvider(this, 'GithubProvider', {
-      url: `https://${GITHUB_DOMAIN}`,
-      clientIds: ['sts.amazonaws.com'],
+    const providerArn = cdk.Stack.of(this).formatArn({
+      service: 'iam',
+      region: '',
+      resource: 'oidc-provider',
+      resourceName: GITHUB_DOMAIN,
     });
+    const providerResource = this.createProviderResource(providerArn);
+    // The custom resource returns the provider ARN, so the role that trusts it waits for the provider.
+    this.provider = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
+      this,
+      'GithubProvider',
+      providerResource.ref,
+    );
 
     const context = `environment:${props.environment}`;
     const subjects = [
@@ -84,7 +103,7 @@ export class GitHubActionsOidcConstruct extends Construct {
         [`${GITHUB_DOMAIN}:sub`]: subjects,
       },
       StringEquals: {
-        [`${GITHUB_DOMAIN}:aud`]: 'sts.amazonaws.com',
+        [`${GITHUB_DOMAIN}:aud`]: GITHUB_AUDIENCE,
       },
     };
 
@@ -94,6 +113,49 @@ export class GitHubActionsOidcConstruct extends Construct {
       managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
       maxSessionDuration: props.maxSessionDuration ?? cdk.Duration.hours(2),
       roleName: props.roleName ?? process.env.GITHUB_DEPLOY_ROLE ?? DEFAULT_ROLE_NAME,
+    });
+  }
+
+  /** A log group that the stack deletes, so no function logs to Lambda's implicit one, which outlives the stack. */
+  private createLogGroup(id: string): logs.LogGroup {
+    return new logs.LogGroup(this, id, {
+      retention: logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+  }
+
+  /** The custom resource that creates the account's GitHub provider or adopts the one it has. */
+  private createProviderResource(providerArn: string): cdk.CustomResource {
+    const handler = new lambda.Function(this, 'ProviderHandler', {
+      runtime: lambda.Runtime.PYTHON_3_14,
+      architecture: lambda.Architecture.ARM_64,
+      handler: 'index.on_event',
+      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'assets', 'lambda', 'github-oidc-provider')),
+      description: "Creates or adopts the account's GitHub Actions OIDC provider",
+      timeout: cdk.Duration.minutes(2),
+      logGroup: this.createLogGroup('ProviderHandlerLogs'),
+    });
+    handler.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          'iam:AddClientIDToOpenIDConnectProvider',
+          'iam:CreateOpenIDConnectProvider',
+          'iam:GetOpenIDConnectProvider',
+        ],
+        resources: [providerArn],
+      }),
+    );
+    const provider = new cr.Provider(this, 'ProviderFramework', {
+      onEventHandler: handler,
+      logGroup: this.createLogGroup('ProviderFrameworkLogs'),
+    });
+    return new cdk.CustomResource(this, 'Provider', {
+      serviceToken: provider.serviceToken,
+      resourceType: 'Custom::GitHubOidcProvider',
+      properties: {
+        url: `https://${GITHUB_DOMAIN}`,
+        clientIds: [GITHUB_AUDIENCE],
+      },
     });
   }
 }
